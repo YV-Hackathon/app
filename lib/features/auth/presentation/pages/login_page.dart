@@ -4,6 +4,7 @@ import '../../../../shared/widgets/common/app_button.dart';
 import '../../../../shared/widgets/common/app_text_field.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/extensions/context_extensions.dart';
 import '../providers/auth_provider.dart';
 
 class LoginPage extends ConsumerStatefulWidget {
@@ -28,8 +29,6 @@ class _LoginPageState extends ConsumerState<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    final authState = ref.watch(authNotifierProvider);
-
     ref.listen(authNotifierProvider, (previous, next) {
       next.whenOrNull(
         data: (user) {
@@ -60,11 +59,13 @@ class _LoginPageState extends ConsumerState<LoginPage> {
               const SizedBox(height: 32),
               AppEmailField(
                 controller: _emailController,
+                validator: Validators.email,
                 onChanged: (value) {},
               ),
               const SizedBox(height: 16),
               AppPasswordField(
                 controller: _passwordController,
+                validator: Validators.password,
                 onChanged: (value) {},
               ),
               const SizedBox(height: 24),

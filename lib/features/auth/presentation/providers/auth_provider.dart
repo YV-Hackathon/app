@@ -5,7 +5,6 @@ import '../../domain/usecases/register_usecase.dart';
 import '../../domain/entities/user_entity.dart';
 import '../../../../shared/services/network_service.dart';
 import '../../../../shared/services/storage_service.dart';
-import '../../../../shared/utils/result.dart';
 
 part 'auth_provider.g.dart';
 

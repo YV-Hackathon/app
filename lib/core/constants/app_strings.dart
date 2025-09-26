@@ -31,4 +31,15 @@ class AppStrings {
   static const String noData = 'No data available';
   static const String noResults = 'No results found';
   static const String emptyField = 'This field cannot be empty';
+
+  // Auth
+  static const String login = 'Login';
+  static const String register = 'Register';
+  static const String logout = 'Logout';
+  static const String email = 'Email';
+  static const String password = 'Password';
+  static const String confirmPassword = 'Confirm Password';
+  static const String forgotPassword = 'Forgot Password?';
+  static const String dontHaveAccount = 'Don\'t have an account? Register';
+  static const String alreadyHaveAccount = 'Already have an account? Login';
 }

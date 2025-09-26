@@ -36,7 +36,7 @@ extension FutureResultExtensions<T> on FutureResult<T> {
 
   Future<T> getOrElse(T defaultValue) async {
     final result = await this;
-    return result.getOrElse(defaultValue);
+    return result.fold((l) => defaultValue, (r) => r);
   }
 
   Future<T> getOrThrow() async {

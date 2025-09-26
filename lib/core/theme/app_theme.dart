@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../constants/app_colors.dart';
 import '../constants/app_fonts.dart';
+
+part 'app_theme.g.dart';
 
 class AppTheme {
   static ThemeData get lightTheme {
@@ -77,7 +80,7 @@ class AppTheme {
         height: AppFonts.tight,
       ),
       displayMedium: TextStyle(
-        fontSize: AppFonts.display,
+        fontSize: AppFonts.displaySize,
         fontWeight: FontWeight.bold,
         fontFamily: AppFonts.display,
         height: AppFonts.tight,
@@ -126,37 +129,37 @@ class AppTheme {
       ),
       bodyLarge: TextStyle(
         fontSize: AppFonts.lg,
-        fontWeight: FontWeight.regular,
+        fontWeight: FontWeight.w400,
         fontFamily: AppFonts.primary,
         height: AppFonts.relaxed,
       ),
       bodyMedium: TextStyle(
         fontSize: AppFonts.base,
-        fontWeight: FontWeight.regular,
+        fontWeight: FontWeight.w400,
         fontFamily: AppFonts.primary,
         height: AppFonts.relaxed,
       ),
       bodySmall: TextStyle(
         fontSize: AppFonts.sm,
-        fontWeight: FontWeight.regular,
+        fontWeight: FontWeight.w400,
         fontFamily: AppFonts.primary,
         height: AppFonts.relaxed,
       ),
       labelLarge: TextStyle(
         fontSize: AppFonts.sm,
-        fontWeight: FontWeight.medium,
+        fontWeight: FontWeight.w500,
         fontFamily: AppFonts.primary,
         height: AppFonts.normal,
       ),
       labelMedium: TextStyle(
         fontSize: AppFonts.xs,
-        fontWeight: FontWeight.medium,
+        fontWeight: FontWeight.w500,
         fontFamily: AppFonts.primary,
         height: AppFonts.normal,
       ),
       labelSmall: TextStyle(
         fontSize: AppFonts.xs,
-        fontWeight: FontWeight.regular,
+        fontWeight: FontWeight.w400,
         fontFamily: AppFonts.primary,
         height: AppFonts.normal,
       ),
@@ -171,7 +174,7 @@ class AppTheme {
       centerTitle: true,
       titleTextStyle: TextStyle(
         fontSize: AppFonts.lg,
-        fontWeight: FontWeight.semiBold,
+        fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       ),
       systemOverlayStyle: SystemUiOverlayStyle(
@@ -190,9 +193,9 @@ class AppTheme {
         shadowColor: AppColors.shadow,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        textStyle: const TextStyle(
+        textStyle: TextStyle(
           fontSize: AppFonts.base,
-          fontWeight: FontWeight.medium,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -205,9 +208,9 @@ class AppTheme {
         side: const BorderSide(color: AppColors.primary),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        textStyle: const TextStyle(
+        textStyle: TextStyle(
           fontSize: AppFonts.base,
-          fontWeight: FontWeight.medium,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -218,9 +221,9 @@ class AppTheme {
       style: TextButton.styleFrom(
         foregroundColor: AppColors.primary,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        textStyle: const TextStyle(
+        textStyle: TextStyle(
           fontSize: AppFonts.base,
-          fontWeight: FontWeight.medium,
+          fontWeight: FontWeight.w500,
         ),
       ),
     );
@@ -284,5 +287,22 @@ class AppTheme {
       thickness: 1,
       space: 1,
     );
+  }
+}
+
+@riverpod
+class AppThemeNotifier extends _$AppThemeNotifier {
+  @override
+  bool build() {
+    // Default to light theme
+    return false;
+  }
+
+  void toggleTheme() {
+    state = !state;
+  }
+
+  void setDarkMode(bool isDark) {
+    state = isDark;
   }
 }
