@@ -28,6 +28,10 @@ class AppColors {
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceVariant = Color(0xFFF8F9FA);
 
+  // Tab Bar Colors
+  static const Color tabBarBackground = Color(0xFF121212);
+  static const Color tabBarBorder = Color(0xFF353333);
+
   // Text Colors
   static const Color textPrimary = Color(0xFF212121);
   static const Color textSecondary = Color(0xFF757575);
