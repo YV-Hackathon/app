@@ -124,7 +124,7 @@ class ChurchListItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(86),
                     image: DecorationImage(
-                      image: NetworkImage(church.imageUrl),
+                      image: AssetImage(church.imageUrl),
                       fit: BoxFit.cover,
                     ),
                   ),

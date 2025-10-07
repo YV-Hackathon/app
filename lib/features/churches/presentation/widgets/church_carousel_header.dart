@@ -20,31 +20,14 @@ class ChurchCarouselHeader extends StatefulWidget {
 }
 
 class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
-  late PageController _pageController;
   int _currentIndex = 1; // Start with middle church
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(
-      initialPage: _currentIndex,
-      viewportFraction: 0.6,
-    );
-  }
-
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
-
-  void _onPageChanged(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-    if (widget.onChurchSelected != null &&
-        index < widget.featuredChurches.length) {
-      widget.onChurchSelected!(widget.featuredChurches[index]);
+    // Initialize with the first church if available
+    if (widget.featuredChurches.isNotEmpty) {
+      _currentIndex = 0;
     }
   }
 
@@ -87,33 +70,10 @@ class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
             children: [
-              // Church carousel
+              // Church carousel - stacked layout
               SizedBox(
                 height: 148,
-                child: PageView.builder(
-                  controller: _pageController,
-                  onPageChanged: _onPageChanged,
-                  itemCount: widget.featuredChurches.length,
-                  itemBuilder: (context, index) {
-                    final church = widget.featuredChurches[index];
-                    final isCenter = index == _currentIndex;
-
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      margin: EdgeInsets.symmetric(
-                        horizontal: isCenter ? 0 : 20,
-                        vertical: isCenter ? 0 : 20,
-                      ),
-                      child: Center(
-                        child: _buildChurchAvatar(
-                          church: church,
-                          size: isCenter ? 124.0 : 86.0,
-                          isSelected: isCenter,
-                        ),
-                      ),
-                    );
-                  },
-                ),
+                child: Center(child: _buildStackedAvatars()),
               ),
               if (widget.selectedChurch != null)
                 _buildSelectedChurchInfo(widget.selectedChurch!),
@@ -123,6 +83,110 @@ class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
         ],
       ),
     );
+  }
+
+  Widget _buildStackedAvatars() {
+    if (widget.featuredChurches.isEmpty) return const SizedBox.shrink();
+
+    // Get the three avatars to display (previous, current, next)
+    final currentIndex = _currentIndex;
+    final previousIndex =
+        currentIndex > 0
+            ? currentIndex - 1
+            : widget.featuredChurches.length - 1;
+    final nextIndex =
+        currentIndex < widget.featuredChurches.length - 1
+            ? currentIndex + 1
+            : 0;
+
+    return SizedBox(
+      width: 200, // Total width for the stacked avatars
+      height: 124,
+      child: GestureDetector(
+        onPanStart: (details) {
+          print('Pan started at: ${details.localPosition}');
+        },
+        onPanUpdate: (details) {
+          // Optional: Add visual feedback during swipe
+          // You could add a slight scale or opacity change here
+        },
+        onPanEnd: (details) {
+          // Detect swipe direction based on velocity
+          final velocity = details.velocity.pixelsPerSecond.dx;
+          const swipeThreshold = 300.0; // Minimum velocity for swipe detection
+
+          print('Pan ended with velocity: $velocity');
+
+          if (velocity > swipeThreshold) {
+            // Swipe right - go to previous
+            final prevIndex =
+                currentIndex > 0
+                    ? currentIndex - 1
+                    : widget.featuredChurches.length - 1;
+            print('Swipe right detected, navigating to: $prevIndex');
+            _navigateToIndex(prevIndex);
+          } else if (velocity < -swipeThreshold) {
+            // Swipe left - go to next
+            final nextIndex =
+                currentIndex < widget.featuredChurches.length - 1
+                    ? currentIndex + 1
+                    : 0;
+            print('Swipe left detected, navigating to: $nextIndex');
+            _navigateToIndex(nextIndex);
+          }
+        },
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // Previous avatar (left, partially visible)
+            Positioned(
+              left: 0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _navigateToIndex(previousIndex),
+                child: _buildChurchAvatar(
+                  church: widget.featuredChurches[previousIndex],
+                  size: 86.0,
+                  isSelected: false,
+                ),
+              ),
+            ),
+            // Next avatar (right, partially visible)
+            Positioned(
+              right: 0,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => _navigateToIndex(nextIndex),
+                child: _buildChurchAvatar(
+                  church: widget.featuredChurches[nextIndex],
+                  size: 86.0,
+                  isSelected: false,
+                ),
+              ),
+            ),
+            // Current avatar (center, fully visible, on top)
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () => _navigateToIndex(currentIndex),
+              child: _buildChurchAvatar(
+                church: widget.featuredChurches[currentIndex],
+                size: 124.0,
+                isSelected: true,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _navigateToIndex(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+    if (widget.onChurchSelected != null) {
+      widget.onChurchSelected!(widget.featuredChurches[index]);
+    }
   }
 
   Widget _buildChurchAvatar({
@@ -136,19 +200,16 @@ class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size),
         image: DecorationImage(
-          image: NetworkImage(church.imageUrl),
+          image: AssetImage(church.imageUrl),
           fit: BoxFit.cover,
         ),
-        boxShadow:
-            isSelected
-                ? [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-                : null,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isSelected ? 0.3 : 0.2),
+            blurRadius: isSelected ? 8 : 4,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
     );
   }

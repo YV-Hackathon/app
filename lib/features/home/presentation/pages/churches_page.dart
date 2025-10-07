@@ -25,8 +25,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
       name: 'Life.Church Edmond',
       description:
           'This is the start of the church bio, where pastors state their beliefs...',
-      imageUrl:
-          'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400',
+      imageUrl: 'assets/images/church_avatars/church_avatar_2.png',
       distance: 4.8,
       rating: 96,
       attributes: ['Contemporary', 'Large'],
@@ -36,8 +35,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
       name: 'Coffee Creek Church',
       description:
           'This is the start of the church bio, where pastors state their beliefs...',
-      imageUrl:
-          'https://images.unsplash.com/photo-1529107386315-e1a2ed48a78e?w=400',
+      imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
       distance: 2.4,
       rating: 89,
       attributes: ['Traditional', 'Medium'],
@@ -47,8 +45,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
       name: 'Hope Church',
       description:
           'This is the start of the church bio, where pastors state their beliefs...',
-      imageUrl:
-          'https://images.unsplash.com/photo-1541746972996-4e0b0f93e586?w=400',
+      imageUrl: 'assets/images/church_avatars/church_avatar_3.png',
       distance: -1, // Online
       rating: 92,
       attributes: ['Contemporary', 'Online'],
@@ -65,8 +62,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
           name: 'Life.Church Edmond',
           description:
               'This is the start of the church bio, where pastors state their beliefs...',
-          imageUrl:
-              'https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400',
+          imageUrl: 'assets/images/church_avatars/church_avatar_2.png',
           distance: 4.8,
           rating: 96,
           attributes: ['Contemporary'],
@@ -76,8 +72,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
           name: 'Coffee Creek Church',
           description:
               'This is the start of the church bio, where pastors state their beliefs...',
-          imageUrl:
-              'https://images.unsplash.com/photo-1529107386315-e1a2ed48a78e?w=400',
+          imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
           distance: 2.4,
           rating: 89,
           attributes: ['Traditional'],
@@ -87,8 +82,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
           name: 'Hope Church',
           description:
               'This is the start of the church bio, where pastors state their beliefs...',
-          imageUrl:
-              'https://images.unsplash.com/photo-1541746972996-4e0b0f93e586?w=400',
+          imageUrl: 'assets/images/church_avatars/church_avatar_3.png',
           distance: -1,
           rating: 92,
           attributes: ['Contemporary'],
@@ -104,8 +98,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
           name: 'Church Name',
           description:
               'This is the start of the church bio, where pastors state their beliefs...',
-          imageUrl:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
+          imageUrl: 'assets/images/church_avatars/church_avatar_4.png',
           distance: 3.6,
           rating: 85,
           attributes: ['Traditional'],
@@ -115,8 +108,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
           name: 'Church Name',
           description:
               'This is the start of the church bio, where pastors state their beliefs...',
-          imageUrl:
-              'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=400',
+          imageUrl: 'assets/images/church_avatars/church_avatar_5.png',
           distance: 2.2,
           rating: 88,
           attributes: ['Contemporary'],
@@ -126,8 +118,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
           name: 'Church Name',
           description:
               'This is the start of the church bio, where pastors state their beliefs...',
-          imageUrl:
-              'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
+          imageUrl: 'assets/images/church_avatars/church_avatar_6.png',
           distance: 8.1,
           rating: 91,
           attributes: ['Traditional'],
