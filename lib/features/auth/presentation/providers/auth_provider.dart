@@ -1,4 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
@@ -72,11 +73,11 @@ class AuthNotifier extends _$AuthNotifier {
 }
 
 @riverpod
-NetworkService networkService(NetworkServiceRef ref) {
+NetworkService networkService(Ref ref) {
   return NetworkServiceFactory.create();
 }
 
 @riverpod
-StorageService storageService(StorageServiceRef ref) {
+StorageService storageService(Ref ref) {
   return SharedPreferencesStorageService();
 }
