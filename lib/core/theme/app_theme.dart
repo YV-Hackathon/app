@@ -40,7 +40,8 @@ class AppTheme {
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        surface: Color(0xFF1E1E1E),
+        surface: AppColors.tabBarBackground,
+        background: AppColors.tabBarBackground,
         error: AppColors.error,
         onPrimary: AppColors.white,
         onSecondary: AppColors.white,
@@ -52,7 +53,7 @@ class AppTheme {
         displayColor: AppColors.white,
       ),
       appBarTheme: _appBarTheme.copyWith(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.tabBarBackground,
         foregroundColor: AppColors.white,
       ),
       elevatedButtonTheme: _elevatedButtonTheme,
@@ -61,7 +62,7 @@ class AppTheme {
       inputDecorationTheme: _inputDecorationTheme,
       cardTheme: _cardTheme.copyWith(color: const Color(0xFF2C2C2C)),
       bottomNavigationBarTheme: _bottomNavigationBarTheme.copyWith(
-        backgroundColor: const Color(0xFF1E1E1E),
+        backgroundColor: AppColors.tabBarBackground,
       ),
       dividerTheme: _dividerTheme.copyWith(color: AppColors.greyDark),
     );
@@ -290,8 +291,8 @@ class AppTheme {
 class AppThemeNotifier extends _$AppThemeNotifier {
   @override
   bool build() {
-    // Default to light theme
-    return false;
+    // Default to dark theme
+    return true;
   }
 
   void toggleTheme() {

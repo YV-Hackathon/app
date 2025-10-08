@@ -2,6 +2,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
+import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/onboarding/presentation/pages/unified_onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/loading_screen_page.dart';
 import '../../features/onboarding/presentation/pages/sermon_clips_page.dart';
@@ -75,19 +76,11 @@ final appRouter = GoRouter(
       name: 'sermon-clips',
       builder: (context, state) => const SermonClipsPage(),
     ),
+
     GoRoute(
       path: '/home',
       name: 'home',
-      builder:
-          (context, state) => const Scaffold(
-            backgroundColor: Color(0xFF121212),
-            body: Center(
-              child: Text(
-                'Home Screen - Coming Soon!',
-                style: TextStyle(color: Colors.white, fontSize: 24),
-              ),
-            ),
-          ),
+      builder: (context, state) => const HomePage(),
     ),
     // Add more routes here as you create pages
   ],
