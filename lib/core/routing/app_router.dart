@@ -1,5 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'package:flutter/material.dart';
+import '../../features/churches/domain/entities/church.dart';
+import '../../features/churches/presentation/pages/church_profile_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -82,6 +84,31 @@ final appRouter = GoRouter(
       name: 'home',
       builder: (context, state) => const HomePage(),
     ),
-    // Add more routes here as you create pages
+
+    GoRoute(
+      path: '/church/:churchId',
+      name: 'church-profile',
+      builder: (context, state) {
+        final churchId = state.pathParameters['churchId']!;
+        // For now, we'll create a mock church. In a real app, you'd fetch this from a service
+        final church = Church(
+          id: churchId,
+          name: 'Grace Community Church',
+          description:
+          'Our mission is to glorify God by proclaiming the gospel of Jesus Christ through the power of the Holy Spirit, for the salvation of the lost and edification of the church.',
+          imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
+          distance: 4.8,
+          rating: 96.0,
+          attributes: [
+            'Expository',
+            'Traditional Worship',
+            'Multilingual',
+            'Family-Friendly',
+            'Global Missions',
+          ],
+        );
+        return ChurchProfilePage(church: church);
+      },
+    ),
   ],
 );
