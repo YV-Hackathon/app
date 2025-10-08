@@ -6,7 +6,7 @@ part of 'auth_provider.dart';
 // RiverpodGenerator
 // **************************************************************************
 
-String _$networkServiceHash() => r'4c8b2e586caf43cd1e43e13380de8dfa117513bd';
+String _$networkServiceHash() => r'a893221fcc2d8846ea0276044e9ef946a9e96060';
 
 /// See also [networkService].
 @ProviderFor(networkService)
@@ -23,7 +23,7 @@ final networkServiceProvider = AutoDisposeProvider<NetworkService>.internal(
 @Deprecated('Will be removed in 3.0. Use Ref instead')
 // ignore: unused_element
 typedef NetworkServiceRef = AutoDisposeProviderRef<NetworkService>;
-String _$storageServiceHash() => r'a79b603608e19c39370d8877a4063a05532fceb2';
+String _$storageServiceHash() => r'ffa833dab04a84e84a4d9c9e2b9cdc4b1729853d';
 
 /// See also [storageService].
 @ProviderFor(storageService)

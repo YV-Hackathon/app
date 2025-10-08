@@ -14,13 +14,11 @@ class AppTheme {
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.secondary,
-        surface: AppColors.surface,
-        background: AppColors.background,
+        surface: AppColors.background,
         error: AppColors.error,
         onPrimary: AppColors.white,
         onSecondary: AppColors.white,
         onSurface: AppColors.textPrimary,
-        onBackground: AppColors.textPrimary,
         onError: AppColors.white,
       ),
       textTheme: _textTheme,
@@ -48,7 +46,6 @@ class AppTheme {
         onPrimary: AppColors.white,
         onSecondary: AppColors.white,
         onSurface: AppColors.white,
-        onBackground: AppColors.white,
         onError: AppColors.white,
       ),
       textTheme: _textTheme.apply(
