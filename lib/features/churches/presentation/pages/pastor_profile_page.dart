@@ -5,13 +5,13 @@ import '../../../../core/constants/app_fonts.dart';
 import '../../domain/entities/church.dart';
 import '../../domain/entities/pastor.dart';
 import '../../domain/entities/sermon.dart';
-import '../widgets/pastor_card.dart';
+import '../widgets/church_card.dart';
 import '../widgets/sermon_card.dart';
 
-class ChurchProfilePage extends StatelessWidget {
-  final Church church;
+class PastorProfilePage extends StatelessWidget {
+  final Pastor pastor;
 
-  const ChurchProfilePage({super.key, required this.church});
+  const PastorProfilePage({super.key, required this.pastor});
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +19,7 @@ class ChurchProfilePage extends StatelessWidget {
       backgroundColor: AppColors.tabBarBackground,
       body: CustomScrollView(
         slivers: [
-          // Header with church image
+          // Header with pastor image
           SliverAppBar(
             expandedHeight: 228.0,
             floating: false,
@@ -30,7 +30,7 @@ class ChurchProfilePage extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             title: const Text(
-              'Churches',
+              'Back',
               style: TextStyle(
                 color: AppColors.white,
                 fontSize: AppFonts.lg,
@@ -42,7 +42,7 @@ class ChurchProfilePage extends StatelessWidget {
               background: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(church.imageUrl),
+                    image: AssetImage(pastor.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -50,19 +50,19 @@ class ChurchProfilePage extends StatelessWidget {
             ),
           ),
 
-          // Church profile content
+          // Pastor profile content
           SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Church info section with padding
-                _buildChurchInfo(),
+                // Pastor info section with padding
+                _buildPastorInfo(),
                 const SizedBox(height: 32),
 
-                // Pastors section with padding
+                // Churches section with padding
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: _buildPastorsSection(context),
+                  child: _buildChurchesSection(context),
                 ),
                 const SizedBox(height: 32),
 
@@ -77,11 +77,11 @@ class ChurchProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildChurchInfo() {
+  Widget _buildPastorInfo() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Church avatar and basic info
+        // Pastor avatar and basic info
         Padding(
           padding: const EdgeInsets.all(24.0),
           child: Row(
@@ -92,7 +92,7 @@ class ChurchProfilePage extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
                   image: DecorationImage(
-                    image: AssetImage(church.imageUrl),
+                    image: AssetImage(pastor.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -103,7 +103,7 @@ class ChurchProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      church.name,
+                      pastor.name,
                       style: const TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
@@ -113,7 +113,7 @@ class ChurchProfilePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '8,000 Average Weekly Attendance',
+                      pastor.title,
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFFBFBDBD),
@@ -128,7 +128,7 @@ class ChurchProfilePage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Church attributes
+        // Pastor attributes
         SizedBox(
           height: 36, // Fixed height to prevent layout shifts
           child: SingleChildScrollView(
@@ -137,7 +137,7 @@ class ChurchProfilePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
                 children:
-                    church.attributes.map((attribute) {
+                    pastor.attributes.map((attribute) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Container(
@@ -167,11 +167,11 @@ class ChurchProfilePage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Church description
+        // Pastor description
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Text(
-            church.description,
+            pastor.description,
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.white,
@@ -191,19 +191,24 @@ class ChurchProfilePage extends StatelessWidget {
                 child: Container(
                   height: 32,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEDEBEB),
-                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(color: const Color(0xFF474545)),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: const Center(
-                    child: Text(
-                      'Follow',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF121212),
-                        fontFamily: 'Aktiv Grotesk App',
+                  child: const Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.person_add, size: 16, color: AppColors.white),
+                      SizedBox(width: 4),
+                      Text(
+                        'Following',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                          fontFamily: 'Aktiv Grotesk App',
+                        ),
                       ),
-                    ),
+                    ],
                   ),
                 ),
               ),
@@ -240,56 +245,27 @@ class ChurchProfilePage extends StatelessWidget {
         ),
         const SizedBox(height: 16),
 
-        // Location and contact info
+        // Contact info
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on,
-                    size: 16,
-                    color: AppColors.white,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      '13248 Roscoe Blvd Sun Valley, CA 91352',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.white,
-                        fontFamily: 'Aktiv Grotesk App',
-                      ),
-                    ),
-                  ),
-                ],
+              Expanded(
+                child: _buildContactButton(
+                  icon: Icons.language,
+                  label: 'Website',
+                ),
               ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildContactButton(
-                      icon: Icons.language,
-                      label: 'Website',
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildContactButton(
-                      icon: Icons.calendar_today,
-                      label: 'Services',
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildContactButton(
-                      icon: Icons.email,
-                      label: 'Contact',
-                    ),
-                  ),
-                ],
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildContactButton(
+                  icon: Icons.calendar_today,
+                  label: 'Services',
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: _buildContactButton(icon: Icons.email, label: 'Contact'),
               ),
             ],
           ),
@@ -324,8 +300,8 @@ class ChurchProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildPastorsSection(BuildContext context) {
-    final pastors = _getMockPastors();
+  Widget _buildChurchesSection(BuildContext context) {
+    final churches = _getMockChurches();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -334,7 +310,7 @@ class ChurchProfilePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             const Text(
-              'Pastors',
+              'Churches',
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
@@ -368,13 +344,13 @@ class ChurchProfilePage extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 16),
-        ...pastors.map(
-          (pastor) => Padding(
+        ...churches.map(
+          (church) => Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: PastorCard(
-              pastor: pastor,
+            child: ChurchCard(
+              church: church,
               onTap: () {
-                context.push('/pastor/${pastor.id}');
+                context.push('/church/${church.id}');
               },
             ),
           ),
@@ -452,69 +428,61 @@ class ChurchProfilePage extends StatelessWidget {
     );
   }
 
-  List<Pastor> _getMockPastors() {
+  List<Church> _getMockChurches() {
     return [
-      const Pastor(
+      const Church(
         id: '1',
-        name: 'John McArthur',
-        title: 'Former Pastor',
+        name: 'Grace Community Church',
+        description:
+            'A church committed to expository preaching and biblical teaching.',
         imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
-        tenure: '1969-2025',
-        description:
-            'Former pastor with decades of experience in expository preaching.',
-        attributes: ['Expository', 'Author', 'Radio Host'],
+        distance: 4.8,
+        rating: 96.0,
+        attributes: ['Expository', 'Traditional Worship', 'Multilingual'],
       ),
-      const Pastor(
+      const Church(
         id: '2',
-        name: 'Mike Riccardi',
-        title: 'Senior Pastor',
+        name: 'Immanuel Bible Church',
+        description: 'A church focused on community and discipleship.',
         imageUrl: 'assets/images/church_avatars/church_avatar_2.png',
-        tenure: '2012-Present',
-        description:
-            'Current senior pastor focused on biblical teaching and discipleship.',
-        attributes: ['Expository', 'Discipleship', 'Teaching'],
+        distance: 2.1,
+        rating: 94.0,
+        attributes: ['Community', 'Discipleship', 'Family-Friendly'],
       ),
-      const Pastor(
+      const Church(
         id: '3',
-        name: 'Judy Kim',
-        title: "Woman's Pastor",
-        imageUrl: 'assets/images/church_avatars/church_avatar_3.png',
-        tenure: '2025-Present',
+        name: 'Together for the Gospel',
         description:
-            'Women\'s ministry pastor dedicated to serving and equipping women.',
-        attributes: ['Women\'s Ministry', 'Discipleship', 'Community'],
+            'A conference and ministry focused on gospel-centered preaching.',
+        imageUrl: 'assets/images/church_avatars/church_avatar_3.png',
+        distance: 0.0,
+        rating: 98.0,
+        attributes: ['Conference', 'Gospel-Centered', 'Teaching'],
       ),
     ];
   }
 
   List<Sermon> _getMockSermons() {
     return [
-      const Sermon(
+      Sermon(
         id: '1',
         title: 'The Gift of the Gospel',
-        pastorName: 'John McArthur',
+        pastorName: pastor.name,
         thumbnailUrl: 'assets/images/church_avatars/church_avatar_1.png',
         duration: '36:24',
       ),
-      const Sermon(
+      Sermon(
         id: '2',
         title: 'Free Will',
-        pastorName: 'John McArthur',
+        pastorName: pastor.name,
         thumbnailUrl: 'assets/images/church_avatars/church_avatar_2.png',
         duration: '46:12',
       ),
-      const Sermon(
+      Sermon(
         id: '3',
-        title: 'Back to School Summer Camp Devotional',
-        pastorName: 'Partner Name',
-        thumbnailUrl: 'assets/images/church_avatars/church_avatar_3.png',
-        duration: '6:24',
-      ),
-      const Sermon(
-        id: '4',
         title: 'Desiring God',
-        pastorName: 'John McArthur',
-        thumbnailUrl: 'assets/images/church_avatars/church_avatar_4.png',
+        pastorName: pastor.name,
+        thumbnailUrl: 'assets/images/church_avatars/church_avatar_3.png',
         duration: '36:24',
       ),
     ];
