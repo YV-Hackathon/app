@@ -1,5 +1,8 @@
 import 'package:go_router/go_router.dart';
-import 'package:flutter/material.dart';
+import '../../features/churches/domain/entities/church.dart';
+import '../../features/churches/domain/entities/pastor.dart';
+import '../../features/churches/presentation/pages/church_profile_page.dart';
+import '../../features/churches/presentation/pages/pastor_profile_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
@@ -82,6 +85,58 @@ final appRouter = GoRouter(
       name: 'home',
       builder: (context, state) => const HomePage(),
     ),
-    // Add more routes here as you create pages
+
+    GoRoute(
+      path: '/church/:churchId',
+      name: 'church-profile',
+      builder: (context, state) {
+        final churchId = state.pathParameters['churchId']!;
+        // For now, we'll create a mock church. In a real app, you'd fetch this from a service
+        final church = Church(
+          id: churchId,
+          name: 'Grace Community Church',
+          description:
+              'Our mission is to glorify God by proclaiming the gospel of Jesus Christ through the power of the Holy Spirit, for the salvation of the lost and edification of the church.',
+          imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
+          distance: 4.8,
+          rating: 96.0,
+          attributes: [
+            'Expository',
+            'Traditional Worship',
+            'Multilingual',
+            'Family-Friendly',
+            'Global Missions',
+          ],
+        );
+        return ChurchProfilePage(church: church);
+      },
+    ),
+
+    GoRoute(
+      path: '/pastor/:pastorId',
+      name: 'pastor-profile',
+      builder: (context, state) {
+        final pastorId = state.pathParameters['pastorId']!;
+        // For now, we'll create a mock pastor. In a real app, you'd fetch this from a service
+        final pastor = Pastor(
+          id: pastorId,
+          name: 'John MacArthur',
+          title: 'Former Pastor at Grace Community Church',
+          imageUrl:
+              'assets/speakers/2020dd88fc696356bd502a0956060e1469ac501f.png',
+          tenure: '1969-2025',
+          description:
+              'John MacArthur served as pastor of Grace Community Church for over five decades, faithfully preaching God\'s Word with clarity and conviction to equip believers.',
+          attributes: [
+            'Expository',
+            'Calvinist',
+            'Author',
+            'Radio Host',
+            'Conservative Evangelical',
+          ],
+        );
+        return PastorProfilePage(pastor: pastor);
+      },
+    ),
   ],
 );

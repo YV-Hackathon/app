@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_fonts.dart';
 import '../../../churches/domain/entities/church.dart';
@@ -151,9 +152,7 @@ class _ChurchesPageState extends State<ChurchesPage> {
 
   void _onChurchTap(Church church) {
     // Navigate to church detail page
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('Tapped on ${church.name}')));
+    context.push('/church/${church.id}');
   }
 
   void _onSeeAllTap(String sectionTitle) {
