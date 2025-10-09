@@ -53,7 +53,7 @@ class OnboardingSubmissionState {
 }
 
 /// Submission Notifier
-@riverpod
+@Riverpod(keepAlive: true)
 class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
   @override
   OnboardingSubmissionState build() {
@@ -157,10 +157,28 @@ class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
       final useCase = ref.read(submitOnboardingUseCaseProvider);
       final response = await useCase(request);
 
+      print('✅ Submission successful!');
+      print('📦 Response: $response');
+      print(
+        '🎬 Recommended Sermons Count: ${response.recommendedSermons?.length ?? 0}',
+      );
+
+      if (response.recommendedSermons != null &&
+          response.recommendedSermons!.isNotEmpty) {
+        print('🎥 First sermon: ${response.recommendedSermons!.first.title}');
+        print(
+          '👤 Speaker: ${response.recommendedSermons!.first.speaker?.name ?? "Unknown"}',
+        );
+      } else {
+        print('⚠️ WARNING: No recommended sermons in response!');
+      }
+
       state = state.copyWith(
         status: SubmissionStatus.success,
         response: response,
       );
+
+      print('💾 State updated with response. Status: ${state.status}');
     } catch (e, stackTrace) {
       print('❌ Submission Error: $e');
       print('📍 Stack trace: $stackTrace');
@@ -174,4 +192,25 @@ class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
   void reset() {
     state = const OnboardingSubmissionState();
   }
+}
+
+/// Provider to access recommended sermons from the submission response
+@Riverpod(keepAlive: true)
+List<RecommendedSermon> recommendedSermons(Ref ref) {
+  final submissionState = ref.watch(onboardingSubmissionNotifierProvider);
+  final sermons = submissionState.response?.recommendedSermons ?? [];
+
+  print('🔍 recommendedSermonsProvider called');
+  print('   State status: ${submissionState.status}');
+  print('   Response exists: ${submissionState.response != null}');
+  print('   Sermons count: ${sermons.length}');
+
+  return sermons;
+}
+
+/// Provider to check if recommended sermons are available
+@Riverpod(keepAlive: true)
+bool hasRecommendedSermons(Ref ref) {
+  final sermons = ref.watch(recommendedSermonsProvider);
+  return sermons.isNotEmpty;
 }
