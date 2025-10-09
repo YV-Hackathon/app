@@ -8,9 +8,7 @@ class QuestionOption with _$QuestionOption {
     required String id,
     required String title,
     required String description,
+    String? imageUrl,
     @Default(false) bool isSelected,
   }) = _QuestionOption;
 }
-
-
-

@@ -61,7 +61,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
                     // App Name
                     const Text(
-                      'App Name Here',
+                      'PewPal',
                       style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,

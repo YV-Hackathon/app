@@ -6,10 +6,14 @@ part 'question_option_model.g.dart';
 
 @freezed
 class QuestionOptionModel with _$QuestionOptionModel {
+  const QuestionOptionModel._();
+
   const factory QuestionOptionModel({
-    required String id,
-    required String title,
-    required String description,
+    required String value,
+    required String label,
+    String? subtitle,
+    String? church,
+    @JsonKey(name: 'profile_picture_url') String? profilePictureUrl,
     @Default(false) bool isSelected,
   }) = _QuestionOptionModel;
 
@@ -19,10 +23,21 @@ class QuestionOptionModel with _$QuestionOptionModel {
 
 extension QuestionOptionModelX on QuestionOptionModel {
   QuestionOption toEntity() {
+    // Build description from subtitle and church
+    final descriptionParts = <String>[];
+    if (subtitle != null && subtitle!.isNotEmpty) {
+      descriptionParts.add(subtitle!);
+    }
+    if (church != null && church!.isNotEmpty) {
+      descriptionParts.add(church!);
+    }
+    final description = descriptionParts.join(' • ');
+
     return QuestionOption(
-      id: id,
-      title: title,
+      id: value,
+      title: label,
       description: description,
+      imageUrl: profilePictureUrl,
       isSelected: isSelected,
     );
   }

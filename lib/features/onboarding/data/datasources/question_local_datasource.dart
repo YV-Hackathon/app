@@ -10,24 +10,25 @@ class QuestionLocalDataSourceImpl implements QuestionLocalDataSource {
   Future<List<QuestionModel>> getQuestions() async {
     return [
       QuestionModel(
-        id: '1',
+        id: 'bibleReadingPreference',
         title: 'When you read the Bible, what\'s most helpful for you?',
-        subtitle: 'Find a Church',
+        description: 'Find a Church',
+        type: 'single-select',
         options: [
           const QuestionOptionModel(
-            id: '1',
-            title: 'More Scripture',
-            description: 'Focused on reading large sections of the text',
+            value: 'More Scripture',
+            label: 'More Scripture',
+            subtitle: 'Focused on reading large sections of the text',
           ),
           const QuestionOptionModel(
-            id: '2',
-            title: 'Life Application',
-            description: 'Practical guidance for everyday life',
+            value: 'Life Application',
+            label: 'Life Application',
+            subtitle: 'Practical guidance for everyday life',
           ),
           const QuestionOptionModel(
-            id: '3',
-            title: 'Balanced',
-            description: 'A mix of both Scripture and life application.',
+            value: 'Balanced',
+            label: 'Balanced',
+            subtitle: 'A mix of both Scripture and life application',
           ),
         ],
       ),

@@ -7,10 +7,13 @@ part 'question_model.g.dart';
 
 @freezed
 class QuestionModel with _$QuestionModel {
+  const QuestionModel._();
+
   const factory QuestionModel({
     required String id,
     required String title,
-    required String subtitle,
+    required String description,
+    required String type,
     required List<QuestionOptionModel> options,
   }) = _QuestionModel;
 
@@ -23,7 +26,8 @@ extension QuestionModelX on QuestionModel {
     return Question(
       id: id,
       title: title,
-      subtitle: subtitle,
+      description: description,
+      type: type,
       options: options.map((option) => option.toEntity()).toList(),
     );
   }

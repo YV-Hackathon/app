@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gloo_hackathon/features/onboarding/presentation/providers/sermon_recommendation_provider.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/church_environment_state.dart';
-import '../../domain/entities/church_environment.dart';
-import '../providers/church_environment_provider.dart';
+import '../../domain/entities/question.dart';
+import '../../domain/entities/question_option.dart';
+import '../providers/specific_question_providers.dart';
+import '../providers/question_provider.dart';
+import '../providers/onboarding_submission_provider.dart';
 
 class ChurchEnvironmentPage extends ConsumerStatefulWidget {
   final VoidCallback? onNext;
@@ -18,17 +21,55 @@ class ChurchEnvironmentPage extends ConsumerStatefulWidget {
 class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
   @override
   Widget build(BuildContext context) {
-    final churchEnvironmentState = ref.watch(churchEnvironmentNotifierProvider);
-    final churchEnvironmentNotifier = ref.read(
-      churchEnvironmentNotifierProvider.notifier,
-    );
+    final question = ref.watch(environmentQuestionProvider);
+    final isLoading = ref.watch(questionsLoadingProvider);
+    final error = ref.watch(questionsErrorProvider);
+    final questionNotifier = ref.read(questionNotifierProvider.notifier);
 
-    if (churchEnvironmentState.churchEnvironments.isEmpty) {
+    // Handle loading state
+    if (isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121212),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF217B48)),
+        ),
+      );
+    }
+
+    // Handle error state
+    if (error != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Error: $error',
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => questionNotifier.retry(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF217B48),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Handle empty state
+    if (question == null) {
       return const Scaffold(
         backgroundColor: Color(0xFF121212),
         body: Center(
           child: Text(
-            'No church environments found.',
+            'No question found.',
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -56,20 +97,12 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
               const SizedBox(height: 24),
 
               // Church environment options
-              Expanded(
-                child: _buildChurchEnvironmentOptions(
-                  churchEnvironmentState,
-                  churchEnvironmentNotifier,
-                ),
-              ),
+              Expanded(child: _buildChurchEnvironmentOptions(question)),
 
               const SizedBox(height: 24),
 
               // Continue button
-              _buildContinueButton(
-                churchEnvironmentState,
-                churchEnvironmentNotifier,
-              ),
+              _buildContinueButton(question),
 
               const SizedBox(height: 16),
             ],
@@ -139,23 +172,25 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
     );
   }
 
-  Widget _buildChurchEnvironmentOptions(
-    ChurchEnvironmentState state,
-    ChurchEnvironmentNotifier notifier,
-  ) {
+  Widget _buildChurchEnvironmentOptions(Question question) {
+    final questionState = ref.watch(questionNotifierProvider);
+    final selectedOptionId = questionState.selectedAnswers[question.id];
+
     return ListView.builder(
-      itemCount: state.churchEnvironments.length,
+      itemCount: question.options.length,
       itemBuilder: (context, index) {
-        final churchEnvironment = state.churchEnvironments[index];
-        final isSelected =
-            state.selectedChurchEnvironmentId == churchEnvironment.id;
+        final option = question.options[index];
+        final isSelected = selectedOptionId == option.id;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: _buildChurchEnvironmentCard(
-            churchEnvironment: churchEnvironment,
+            option: option,
             isSelected: isSelected,
-            onTap: () => notifier.selectChurchEnvironment(churchEnvironment.id),
+            onTap:
+                () => ref
+                    .read(questionNotifierProvider.notifier)
+                    .selectAnswer(question.id, option.id),
           ),
         );
       },
@@ -163,7 +198,7 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
   }
 
   Widget _buildChurchEnvironmentCard({
-    required ChurchEnvironment churchEnvironment,
+    required QuestionOption option,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -183,7 +218,7 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    churchEnvironment.title,
+                    option.title,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -193,7 +228,7 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    churchEnvironment.description,
+                    option.description,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.normal,
@@ -243,11 +278,9 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
     );
   }
 
-  Widget _buildContinueButton(
-    ChurchEnvironmentState state,
-    ChurchEnvironmentNotifier notifier,
-  ) {
-    final hasSelection = notifier.hasSelectedChurchEnvironment;
+  Widget _buildContinueButton(Question question) {
+    final questionState = ref.watch(questionNotifierProvider);
+    final hasSelection = questionState.selectedAnswers.containsKey(question.id);
 
     return SizedBox(
       width: double.infinity,
@@ -255,8 +288,20 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
       child: ElevatedButton(
         onPressed:
             hasSelection
-                ? () {
-                  // Use callback if provided, otherwise use default navigation
+                ? () async {
+                  // Submit onboarding in background
+                  print('🚀 Triggering onboarding submission...');
+                  ref
+                      .read(onboardingSubmissionNotifierProvider.notifier)
+                      .submitOnboarding();
+
+                  // Pre-fetch sermon recommendations in background
+                  print('🎬 Pre-fetching sermon recommendations...');
+                  ref
+                      .read(sermonRecommendationNotifierProvider(6).notifier)
+                      .refresh(6);
+
+                  // Navigate immediately (don't wait for response)
                   if (widget.onNext != null) {
                     widget.onNext!();
                   } else if (mounted) {

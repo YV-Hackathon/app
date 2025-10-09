@@ -8,10 +8,8 @@ class Question with _$Question {
   const factory Question({
     required String id,
     required String title,
-    required String subtitle,
+    required String description,
+    required String type,
     required List<QuestionOption> options,
   }) = _Question;
 }
-
-
-

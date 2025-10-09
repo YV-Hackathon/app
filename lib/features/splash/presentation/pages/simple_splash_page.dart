@@ -59,7 +59,7 @@ class _SimpleSplashPageState extends State<SimpleSplashPage> {
                       ),
                       child: Center(
                         child: SvgPicture.asset(
-                          'assets/images/logo.svg',
+                          'assets/images/app_logo.png',
                           width: 54,
                           height: 54,
                           colorFilter: const ColorFilter.mode(
@@ -74,7 +74,7 @@ class _SimpleSplashPageState extends State<SimpleSplashPage> {
 
                     // App Name positioned exactly as in Figma (25px, bold, white, -0.75px letter spacing)
                     const Text(
-                      'App Name Here',
+                      'PewPal',
                       style: TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
