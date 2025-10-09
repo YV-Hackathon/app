@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_fonts.dart';
 import '../../domain/entities/church.dart';
@@ -289,19 +290,27 @@ class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
                 ],
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEDEBEB),
-                borderRadius: BorderRadius.circular(40),
-              ),
-              child: const Text(
-                'Learn More',
-                style: TextStyle(
-                  fontSize: AppFonts.sm,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.tabBarBackground,
-                  fontFamily: 'Aktiv Grotesk App',
+            GestureDetector(
+              onTap: () {
+                context.push('/church/${church.id}');
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFEDEBEB),
+                  borderRadius: BorderRadius.circular(40),
+                ),
+                child: const Text(
+                  'Learn More',
+                  style: TextStyle(
+                    fontSize: AppFonts.sm,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.tabBarBackground,
+                    fontFamily: 'Aktiv Grotesk App',
+                  ),
                 ),
               ),
             ),

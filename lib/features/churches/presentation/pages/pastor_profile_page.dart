@@ -8,10 +8,18 @@ import '../../domain/entities/sermon.dart';
 import '../widgets/church_card.dart';
 import '../widgets/sermon_card.dart';
 
-class PastorProfilePage extends StatelessWidget {
+class PastorProfilePage extends StatefulWidget {
   final Pastor pastor;
 
   const PastorProfilePage({super.key, required this.pastor});
+
+  @override
+  State<PastorProfilePage> createState() => _PastorProfilePageState();
+}
+
+class _PastorProfilePageState extends State<PastorProfilePage> {
+  bool _isFollowing =
+      true; // Start as following since the button shows "Following"
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +50,7 @@ class PastorProfilePage extends StatelessWidget {
               background: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(pastor.imageUrl),
+                    image: AssetImage(widget.pastor.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -92,7 +100,7 @@ class PastorProfilePage extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
                   image: DecorationImage(
-                    image: AssetImage(pastor.imageUrl),
+                    image: AssetImage(widget.pastor.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -103,7 +111,7 @@ class PastorProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      pastor.name,
+                      widget.pastor.name,
                       style: const TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
@@ -113,7 +121,7 @@ class PastorProfilePage extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      pastor.title,
+                      widget.pastor.title,
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFFBFBDBD),
@@ -137,7 +145,7 @@ class PastorProfilePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
                 children:
-                    pastor.attributes.map((attribute) {
+                    widget.pastor.attributes.map((attribute) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Container(
@@ -171,7 +179,7 @@ class PastorProfilePage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Text(
-            pastor.description,
+            widget.pastor.description,
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.white,
@@ -188,27 +196,50 @@ class PastorProfilePage extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 32,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: const Color(0xFF474545)),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.person_add, size: 16, color: AppColors.white),
-                      SizedBox(width: 4),
-                      Text(
-                        'Following',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                          fontFamily: 'Aktiv Grotesk App',
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isFollowing = !_isFollowing;
+                    });
+                  },
+                  child: Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color:
+                          _isFollowing
+                              ? Colors.transparent
+                              : const Color(0xFFEDEBEB),
+                      border:
+                          _isFollowing
+                              ? Border.all(color: const Color(0xFF474545))
+                              : null,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_isFollowing) ...[
+                          const Icon(
+                            Icons.check,
+                            size: 16,
+                            color: AppColors.white,
+                          ),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(
+                          _isFollowing ? 'Following' : 'Follow',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                _isFollowing
+                                    ? AppColors.white
+                                    : const Color(0xFF121212),
+                            fontFamily: 'Aktiv Grotesk App',
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -319,7 +350,9 @@ class PastorProfilePage extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                context.push('/pastor/${widget.pastor.id}/churches/see-all');
+              },
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -381,7 +414,9 @@ class PastorProfilePage extends StatelessWidget {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  context.push('/pastor/${widget.pastor.id}/sermons/see-all');
+                },
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -467,21 +502,21 @@ class PastorProfilePage extends StatelessWidget {
       Sermon(
         id: '1',
         title: 'The Gift of the Gospel',
-        pastorName: pastor.name,
+        pastorName: widget.pastor.name,
         thumbnailUrl: 'assets/images/church_avatars/church_avatar_1.png',
         duration: '36:24',
       ),
       Sermon(
         id: '2',
         title: 'Free Will',
-        pastorName: pastor.name,
+        pastorName: widget.pastor.name,
         thumbnailUrl: 'assets/images/church_avatars/church_avatar_2.png',
         duration: '46:12',
       ),
       Sermon(
         id: '3',
         title: 'Desiring God',
-        pastorName: pastor.name,
+        pastorName: widget.pastor.name,
         thumbnailUrl: 'assets/images/church_avatars/church_avatar_3.png',
         duration: '36:24',
       ),

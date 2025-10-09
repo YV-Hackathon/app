@@ -157,9 +157,8 @@ class _ChurchesPageState extends State<ChurchesPage> {
 
   void _onSeeAllTap(String sectionTitle) {
     // Navigate to see all page for this section
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('See all $sectionTitle')));
+    final encodedTitle = sectionTitle.toLowerCase().replaceAll(' ', '-');
+    context.push('/churches/see-all/$encodedTitle');
   }
 
   @override

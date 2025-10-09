@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class DiscoverPage extends StatelessWidget {
   const DiscoverPage({super.key});
@@ -20,6 +21,13 @@ class DiscoverPage extends StatelessWidget {
             Text(
               'Explore new content and communities',
               style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            SizedBox(height: 32),
+            ElevatedButton(
+              onPressed: () {
+                context.go('/onboarding');
+              },
+              child: Text('Start Onboarding'),
             ),
           ],
         ),
