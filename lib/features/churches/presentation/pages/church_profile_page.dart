@@ -8,10 +8,17 @@ import '../../domain/entities/sermon.dart';
 import '../widgets/pastor_card.dart';
 import '../widgets/sermon_card.dart';
 
-class ChurchProfilePage extends StatelessWidget {
+class ChurchProfilePage extends StatefulWidget {
   final Church church;
 
   const ChurchProfilePage({super.key, required this.church});
+
+  @override
+  State<ChurchProfilePage> createState() => _ChurchProfilePageState();
+}
+
+class _ChurchProfilePageState extends State<ChurchProfilePage> {
+  bool _isFollowing = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +49,7 @@ class ChurchProfilePage extends StatelessWidget {
               background: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(church.imageUrl),
+                    image: AssetImage(widget.church.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -92,7 +99,7 @@ class ChurchProfilePage extends StatelessWidget {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
                   image: DecorationImage(
-                    image: AssetImage(church.imageUrl),
+                    image: AssetImage(widget.church.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -103,7 +110,7 @@ class ChurchProfilePage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      church.name,
+                      widget.church.name,
                       style: const TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
@@ -137,7 +144,7 @@ class ChurchProfilePage extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
                 children:
-                    church.attributes.map((attribute) {
+                    widget.church.attributes.map((attribute) {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8),
                         child: Container(
@@ -171,7 +178,7 @@ class ChurchProfilePage extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24.0),
           child: Text(
-            church.description,
+            widget.church.description,
             style: const TextStyle(
               fontSize: 13,
               color: AppColors.white,
@@ -188,20 +195,50 @@ class ChurchProfilePage extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: Container(
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEDEBEB),
-                    borderRadius: BorderRadius.circular(40),
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'Follow',
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF121212),
-                        fontFamily: 'Aktiv Grotesk App',
+                child: GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isFollowing = !_isFollowing;
+                    });
+                  },
+                  child: Container(
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color:
+                          _isFollowing
+                              ? Colors.transparent
+                              : const Color(0xFFEDEBEB),
+                      border:
+                          _isFollowing
+                              ? Border.all(color: const Color(0xFF474545))
+                              : null,
+                      borderRadius: BorderRadius.circular(40),
+                    ),
+                    child: Center(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (_isFollowing) ...[
+                            const Icon(
+                              Icons.check,
+                              size: 16,
+                              color: AppColors.white,
+                            ),
+                            const SizedBox(width: 4),
+                          ],
+                          Text(
+                            _isFollowing ? 'Following' : 'Follow',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  _isFollowing
+                                      ? AppColors.white
+                                      : const Color(0xFF121212),
+                              fontFamily: 'Aktiv Grotesk App',
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -343,7 +380,9 @@ class ChurchProfilePage extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                context.push('/pastors/see-all');
+              },
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -405,7 +444,9 @@ class ChurchProfilePage extends StatelessWidget {
                 ),
               ),
               GestureDetector(
-                onTap: () {},
+                onTap: () {
+                  context.push('/church/${widget.church.id}/sermons/see-all');
+                },
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [

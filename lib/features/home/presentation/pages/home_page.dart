@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import 'churches_page.dart';
 import 'discover_page.dart';
@@ -92,7 +93,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
               Expanded(
                 child: GestureDetector(
-                  onTap: () => setState(() => _currentIndex = 1),
+                  onTap: () => context.go('/onboarding'),
                   child: Opacity(
                     opacity: _currentIndex == 1 ? 1.0 : 0.5,
                     child: _buildTabContent(
