@@ -30,7 +30,7 @@ class _WelcomeOnboardingPageState extends State<WelcomeOnboardingPage> {
                 children: [
                   // "Hi, I'm [Product Name]" in green
                   const Text(
-                    'Hi, I\'m [Product Name]',
+                    'Hi, I\'m PewPal',
                     style: TextStyle(
                       fontSize: 25,
                       fontWeight: FontWeight.bold,

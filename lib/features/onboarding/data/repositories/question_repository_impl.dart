@@ -1,35 +1,32 @@
+import 'package:gloo_hackathon/features/onboarding/data/models/question_model.dart';
+
 import '../../domain/entities/question.dart';
-import '../../domain/entities/question_option.dart';
 import '../../domain/repositories/question_repository.dart';
-import '../datasources/question_local_datasource.dart';
+import '../datasources/question_remote_datasource.dart';
 
 class QuestionRepositoryImpl implements QuestionRepository {
-  final QuestionLocalDataSource _localDataSource;
+  final QuestionRemoteDataSource _remoteDataSource;
 
-  QuestionRepositoryImpl(this._localDataSource);
+  QuestionRepositoryImpl(this._remoteDataSource);
 
   @override
   Future<List<Question>> getQuestions() async {
-    final questionModels = await _localDataSource.getQuestions();
-    return questionModels
-        .map(
-          (model) => Question(
-            id: model.id,
-            title: model.title,
-            subtitle: model.subtitle,
-            options:
-                model.options
-                    .map(
-                      (option) => QuestionOption(
-                        id: option.id,
-                        title: option.title,
-                        description: option.description,
-                        isSelected: option.isSelected,
-                      ),
-                    )
-                    .toList(),
-          ),
-        )
-        .toList();
+    print('🏦 Repository: Starting to fetch questions...');
+    try {
+      final questionModels = await _remoteDataSource.getQuestions();
+      print('🏦 Repository: Received ${questionModels.length} question models');
+
+      final questionsList =
+          questionModels.map((model) => model.toEntity()).toList();
+
+      print('🏦 Repository: Converted to ${questionsList.length} entities');
+      print('🏦 Repository: Returning questions list');
+
+      return questionsList;
+    } catch (e, stackTrace) {
+      print('❌ Error in repository: $e');
+      print('📍 Stack trace: $stackTrace');
+      rethrow;
+    }
   }
 }

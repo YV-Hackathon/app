@@ -112,6 +112,7 @@ class _PersonalizationInstructionsPageState
                 rotation: -12,
                 isMain: false,
                 showLikeButton: false,
+                imagePath: null,
               ),
             ),
             // Right video (behind, smaller, rotated right)
@@ -124,6 +125,7 @@ class _PersonalizationInstructionsPageState
                 rotation: 12,
                 isMain: false,
                 showLikeButton: personalizationInstructions.showLikeButton,
+                imagePath: null,
               ),
             ),
             // Main center video (on top, larger, no rotation)
@@ -136,6 +138,7 @@ class _PersonalizationInstructionsPageState
                 rotation: 0,
                 isMain: true,
                 showLikeButton: false,
+                imagePath: 'assets/images/swipping_video_image_1.png',
               ),
             ),
           ],
@@ -150,6 +153,7 @@ class _PersonalizationInstructionsPageState
     required double rotation,
     required bool isMain,
     required bool showLikeButton,
+    String? imagePath,
   }) {
     return Transform.rotate(
       angle: rotation * 3.14159 / 180,
@@ -165,7 +169,11 @@ class _PersonalizationInstructionsPageState
           borderRadius: BorderRadius.circular(10),
           child: Stack(
             children: [
-              // Placeholder for video content
+              // Image if provided, otherwise placeholder
+              if (imagePath != null)
+                Positioned.fill(
+                  child: Image.asset(imagePath, fit: BoxFit.cover),
+                ),
 
               // Gradient overlay
               Positioned(
@@ -201,7 +209,7 @@ class _PersonalizationInstructionsPageState
                     child: const Icon(
                       Icons.favorite_border,
                       color: Colors.white,
-                      size: 18,
+                      size: 32,
                     ),
                   ),
                 ),

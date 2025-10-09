@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/teaching_style_state.dart';
-import '../../domain/entities/teaching_style.dart';
-import '../providers/teaching_style_provider.dart';
+import '../../domain/entities/question.dart';
+import '../../domain/entities/question_option.dart';
+import '../providers/specific_question_providers.dart';
+import '../providers/question_provider.dart';
 
 class TeachingStylePage extends ConsumerStatefulWidget {
   final VoidCallback? onNext;
@@ -17,17 +18,55 @@ class TeachingStylePage extends ConsumerStatefulWidget {
 class _TeachingStylePageState extends ConsumerState<TeachingStylePage> {
   @override
   Widget build(BuildContext context) {
-    final teachingStyleState = ref.watch(teachingStyleNotifierProvider);
-    final teachingStyleNotifier = ref.read(
-      teachingStyleNotifierProvider.notifier,
-    );
+    final question = ref.watch(teachingStyleQuestionProvider);
+    final isLoading = ref.watch(questionsLoadingProvider);
+    final error = ref.watch(questionsErrorProvider);
+    final questionNotifier = ref.read(questionNotifierProvider.notifier);
 
-    if (teachingStyleState.teachingStyles.isEmpty) {
+    // Handle loading state
+    if (isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121212),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF217B48)),
+        ),
+      );
+    }
+
+    // Handle error state
+    if (error != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Error: $error',
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => questionNotifier.retry(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF217B48),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Handle empty state
+    if (question == null) {
       return const Scaffold(
         backgroundColor: Color(0xFF121212),
         body: Center(
           child: Text(
-            'No teaching styles found.',
+            'No question found.',
             style: TextStyle(color: Colors.white),
           ),
         ),
@@ -55,17 +94,12 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage> {
               const SizedBox(height: 24),
 
               // Teaching style options
-              Expanded(
-                child: _buildTeachingStyleOptions(
-                  teachingStyleState,
-                  teachingStyleNotifier,
-                ),
-              ),
+              Expanded(child: _buildTeachingStyleOptions(question)),
 
               const SizedBox(height: 24),
 
               // Continue button
-              _buildContinueButton(teachingStyleState, teachingStyleNotifier),
+              _buildContinueButton(question),
 
               const SizedBox(height: 16),
             ],
@@ -135,22 +169,25 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage> {
     );
   }
 
-  Widget _buildTeachingStyleOptions(
-    TeachingStyleState state,
-    TeachingStyleNotifier notifier,
-  ) {
+  Widget _buildTeachingStyleOptions(Question question) {
+    final questionState = ref.watch(questionNotifierProvider);
+    final selectedOptionId = questionState.selectedAnswers[question.id];
+
     return ListView.builder(
-      itemCount: state.teachingStyles.length,
+      itemCount: question.options.length,
       itemBuilder: (context, index) {
-        final teachingStyle = state.teachingStyles[index];
-        final isSelected = state.selectedTeachingStyleId == teachingStyle.id;
+        final option = question.options[index];
+        final isSelected = selectedOptionId == option.id;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: _buildTeachingStyleCard(
-            teachingStyle: teachingStyle,
+            option: option,
             isSelected: isSelected,
-            onTap: () => notifier.selectTeachingStyle(teachingStyle.id),
+            onTap:
+                () => ref
+                    .read(questionNotifierProvider.notifier)
+                    .selectAnswer(question.id, option.id),
           ),
         );
       },
@@ -158,7 +195,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage> {
   }
 
   Widget _buildTeachingStyleCard({
-    required TeachingStyle teachingStyle,
+    required QuestionOption option,
     required bool isSelected,
     required VoidCallback onTap,
   }) {
@@ -178,7 +215,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    teachingStyle.title,
+                    option.title,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -188,7 +225,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    teachingStyle.description,
+                    option.description,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.normal,
@@ -238,11 +275,9 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage> {
     );
   }
 
-  Widget _buildContinueButton(
-    TeachingStyleState state,
-    TeachingStyleNotifier notifier,
-  ) {
-    final hasSelection = notifier.hasSelectedTeachingStyle;
+  Widget _buildContinueButton(Question question) {
+    final questionState = ref.watch(questionNotifierProvider);
+    final hasSelection = questionState.selectedAnswers.containsKey(question.id);
 
     return SizedBox(
       width: double.infinity,

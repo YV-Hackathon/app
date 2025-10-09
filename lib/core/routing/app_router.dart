@@ -1,3 +1,4 @@
+import 'package:gloo_hackathon/features/splash/presentation/pages/simple_splash_page.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/churches/domain/entities/church.dart';
 import '../../features/churches/domain/entities/pastor.dart';

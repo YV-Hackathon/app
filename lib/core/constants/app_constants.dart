@@ -4,9 +4,10 @@ class AppConstants {
   static const String appVersion = '1.0.0';
 
   // API
-  static const String baseUrl = 'https://api.example.com';
+  static const String baseUrl =
+      'https://fastapi-cms-dev-111290968917.us-central1.run.app';
   static const String apiVersion = 'v1';
-  static const Duration apiTimeout = Duration(seconds: 30);
+  static const Duration apiTimeout = Duration(seconds: 60);
 
   // Storage Keys
   static const String userTokenKey = 'user_token';
