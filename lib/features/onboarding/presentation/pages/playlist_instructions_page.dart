@@ -110,6 +110,7 @@ class _PlaylistInstructionsPageState
                 rotation: -12,
                 isMain: false,
                 showSkipButton: playlistInstructions.showSkipButton,
+                imagePath: null,
               ),
             ),
             // Right video (behind, smaller, rotated right)
@@ -122,6 +123,7 @@ class _PlaylistInstructionsPageState
                 rotation: 12,
                 isMain: false,
                 showSkipButton: false,
+                imagePath: null,
               ),
             ),
             // Main center video (on top, larger, no rotation)
@@ -134,6 +136,7 @@ class _PlaylistInstructionsPageState
                 rotation: 0,
                 isMain: true,
                 showSkipButton: false,
+                imagePath: 'assets/images/swipping_video_image_1.png',
               ),
             ),
           ],
@@ -148,6 +151,7 @@ class _PlaylistInstructionsPageState
     required double rotation,
     required bool isMain,
     required bool showSkipButton,
+    String? imagePath,
   }) {
     return Transform.rotate(
       angle: rotation * 3.14159 / 180,
@@ -163,6 +167,12 @@ class _PlaylistInstructionsPageState
           borderRadius: BorderRadius.circular(10),
           child: Stack(
             children: [
+              // Image if provided, otherwise placeholder
+              if (imagePath != null)
+                Positioned.fill(
+                  child: Image.asset(imagePath, fit: BoxFit.cover),
+                ),
+
               // Gradient overlay
               Positioned(
                 bottom: 0,
@@ -197,7 +207,7 @@ class _PlaylistInstructionsPageState
                     child: const Icon(
                       Icons.close,
                       color: Colors.white,
-                      size: 18,
+                      size: 32,
                     ),
                   ),
                 ),

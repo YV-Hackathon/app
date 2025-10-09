@@ -43,45 +43,75 @@ class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
           topRight: Radius.circular(24),
         ),
       ),
-      child: Stack(
-        alignment: AlignmentDirectional.topStart,
-        children: [
-          // Background blob effect
-          Positioned(
-            right: -69,
-            bottom: -88,
-            child: Container(
-              width: 358,
-              height: 377,
-              decoration: BoxDecoration(
-                color: const Color(0xFF217B48).withOpacity(0.36),
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFF217B48).withOpacity(0.36),
-                    blurRadius: 62,
-                    spreadRadius: 0,
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(24),
+          topRight: Radius.circular(24),
+        ),
+        child: Stack(
+          alignment: AlignmentDirectional.topStart,
+          children: [
+            // Blob - Top left (behind content)
+            Positioned(
+              left: -MediaQuery.of(context).size.width * 0.15,
+              top: -MediaQuery.of(context).size.height * 0.05,
+              child: IgnorePointer(
+                child: Container(
+                  width: MediaQuery.of(context).size.width * 1.8,
+                  height: MediaQuery.of(context).size.height * 0.8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        const Color(0xFF3BC175).withOpacity(0.36),
+                        const Color(0xFF3BC175).withOpacity(0.1),
+                        Colors.transparent,
+                      ],
+                      stops: const [0.0, 0.6, 1.0],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    height: 42,
+                    width: 42,
+                    child: Image.asset('assets/images/app_logo.png'),
+                  ),
+                  SizedBox(width: 8),
+                  Text(
+                    'PewPal',
+                    style: TextStyle(
+                      fontSize: AppFonts.lg,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.white,
+                      fontFamily: 'DM Sans',
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
-
-          Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            spacing: 24,
-            children: [
-              // Church carousel - stacked layout
-              SizedBox(
-                height: 148,
-                child: Center(child: _buildStackedAvatars()),
-              ),
-              if (widget.selectedChurch != null)
-                _buildSelectedChurchInfo(widget.selectedChurch!),
-              _buildPageIndicators(),
-            ],
-          ),
-        ],
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              spacing: 24,
+              children: [
+                // Church carousel - stacked layout
+                SizedBox(
+                  height: 148,
+                  child: Center(child: _buildStackedAvatars()),
+                ),
+                if (widget.selectedChurch != null)
+                  _buildSelectedChurchInfo(widget.selectedChurch!),
+                _buildPageIndicators(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

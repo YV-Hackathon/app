@@ -109,6 +109,7 @@ class _PersonalizationIntroPageState
                 height: 180,
                 rotation: -12,
                 isMain: false,
+                imagePath: 'assets/images/swipping_video_image_3.png',
               ),
             ),
             // Right video (behind, smaller, rotated right)
@@ -120,6 +121,7 @@ class _PersonalizationIntroPageState
                 height: 180,
                 rotation: 12,
                 isMain: false,
+                imagePath: 'assets/images/swipping_video_image_2.png',
               ),
             ),
             // Main center video (on top, larger, no rotation)
@@ -131,6 +133,7 @@ class _PersonalizationIntroPageState
                 height: 225,
                 rotation: 0,
                 isMain: true,
+                imagePath: 'assets/images/swipping_video_image_1.png',
               ),
             ),
           ],
@@ -144,6 +147,7 @@ class _PersonalizationIntroPageState
     required double height,
     required double rotation,
     required bool isMain,
+    required String imagePath,
   }) {
     return Transform.rotate(
       angle: rotation * 3.14159 / 180,
@@ -159,9 +163,10 @@ class _PersonalizationIntroPageState
           borderRadius: BorderRadius.circular(10),
           child: Stack(
             children: [
-              // Placeholder for video content
+              // Image covering the entire container
+              Positioned.fill(child: Image.asset(imagePath, fit: BoxFit.cover)),
 
-              // Gradient overlay
+              // Gradient overlay at the bottom
               Positioned(
                 bottom: 0,
                 left: 0,

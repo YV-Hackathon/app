@@ -12,5 +12,6 @@ class Speaker with _$Speaker {
     @Default(false) bool isSelected,
   }) = _Speaker;
 
-  factory Speaker.fromJson(Map<String, dynamic> json) => _$SpeakerFromJson(json);
+  factory Speaker.fromJson(Map<String, dynamic> json) =>
+      _$SpeakerFromJson(json);
 }

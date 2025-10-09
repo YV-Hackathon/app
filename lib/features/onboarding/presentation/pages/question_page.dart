@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/question_state.dart';
 import '../../domain/entities/question.dart';
 import '../../domain/entities/question_option.dart';
+import '../providers/specific_question_providers.dart';
 import '../providers/question_provider.dart';
 
 class QuestionPage extends ConsumerStatefulWidget {
@@ -18,23 +18,62 @@ class QuestionPage extends ConsumerStatefulWidget {
 class _QuestionPageState extends ConsumerState<QuestionPage> {
   @override
   Widget build(BuildContext context) {
-    final questionState = ref.watch(questionNotifierProvider);
+    final question = ref.watch(bibleReadingQuestionProvider);
+    final isLoading = ref.watch(questionsLoadingProvider);
+    final error = ref.watch(questionsErrorProvider);
     final questionNotifier = ref.read(questionNotifierProvider.notifier);
 
-    if (questionState.questions.isEmpty) {
+    // Handle loading state
+    if (isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121212),
+        body: Center(
+          child: CircularProgressIndicator(color: Color(0xFF217B48)),
+        ),
+      );
+    }
+
+    // Handle error state
+    if (error != null) {
+      return Scaffold(
+        backgroundColor: const Color(0xFF121212),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'Error: $error',
+                style: const TextStyle(color: Colors.white),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => questionNotifier.retry(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF217B48),
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    // Handle empty state
+    if (question == null) {
       return const Scaffold(
         backgroundColor: Color(0xFF121212),
         body: Center(
           child: Text(
-            'No questions found.',
+            'No question found.',
             style: TextStyle(color: Colors.white),
           ),
         ),
       );
     }
 
-    final currentQuestion =
-        questionState.questions[questionState.currentQuestionIndex];
+    final currentQuestion = question;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -47,7 +86,7 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
               const SizedBox(height: 32),
 
               // Progress bar
-              _buildProgressBar(questionState),
+              _buildProgressBar(),
 
               const SizedBox(height: 70),
 
@@ -57,18 +96,12 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
               const SizedBox(height: 24),
 
               // Question options
-              Expanded(
-                child: _buildQuestionOptions(
-                  currentQuestion,
-                  questionState,
-                  questionNotifier,
-                ),
-              ),
+              Expanded(child: _buildQuestionOptions(currentQuestion)),
 
               const SizedBox(height: 24),
 
               // Continue button
-              _buildContinueButton(questionState, questionNotifier),
+              _buildContinueButton(currentQuestion),
 
               const SizedBox(height: 16),
             ],
@@ -78,7 +111,7 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
     );
   }
 
-  Widget _buildProgressBar(QuestionState state) {
+  Widget _buildProgressBar() {
     return Row(
       children: [
         Expanded(
@@ -115,7 +148,7 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          question.subtitle,
+          question.description,
           style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
@@ -138,23 +171,25 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
     );
   }
 
-  Widget _buildQuestionOptions(
-    Question question,
-    QuestionState state,
-    QuestionNotifier notifier,
-  ) {
+  Widget _buildQuestionOptions(Question question) {
+    final questionState = ref.watch(questionNotifierProvider);
+    final selectedOptionId = questionState.selectedAnswers[question.id];
+
     return ListView.builder(
       itemCount: question.options.length,
       itemBuilder: (context, index) {
         final option = question.options[index];
-        final isSelected = state.selectedAnswers[question.id] == option.id;
+        final isSelected = selectedOptionId == option.id;
 
         return Padding(
           padding: const EdgeInsets.only(bottom: 24),
           child: _buildOptionCard(
             option: option,
             isSelected: isSelected,
-            onTap: () => notifier.selectAnswer(question.id, option.id),
+            onTap:
+                () => ref
+                    .read(questionNotifierProvider.notifier)
+                    .selectAnswer(question.id, option.id),
           ),
         );
       },
@@ -242,8 +277,9 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
     );
   }
 
-  Widget _buildContinueButton(QuestionState state, QuestionNotifier notifier) {
-    final hasSelection = notifier.hasSelectedAnswer;
+  Widget _buildContinueButton(Question question) {
+    final questionState = ref.watch(questionNotifierProvider);
+    final hasSelection = questionState.selectedAnswers.containsKey(question.id);
 
     return SizedBox(
       width: double.infinity,
@@ -252,7 +288,6 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
         onPressed:
             hasSelection
                 ? () {
-                  notifier.nextQuestion();
                   // Use callback if provided, otherwise use default navigation
                   if (widget.onNext != null) {
                     widget.onNext!();

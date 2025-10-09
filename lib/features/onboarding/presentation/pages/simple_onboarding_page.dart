@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../domain/entities/onboarding_state.dart';
 import '../../domain/entities/speaker.dart';
-import '../providers/onboarding_provider.dart';
+import '../providers/specific_question_providers.dart';
+import '../providers/question_provider.dart';
 import '../widgets/speaker_card.dart';
 
 class SimpleOnboardingPage extends ConsumerStatefulWidget {
@@ -19,8 +19,10 @@ class SimpleOnboardingPage extends ConsumerStatefulWidget {
 class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
   @override
   Widget build(BuildContext context) {
-    final onboardingState = ref.watch(onboardingNotifierProvider);
-    final notifier = ref.read(onboardingNotifierProvider.notifier);
+    final speakers = ref.watch(speakersProvider);
+    final isLoading = ref.watch(questionsLoadingProvider);
+    final error = ref.watch(questionsErrorProvider);
+    final notifier = ref.read(questionNotifierProvider.notifier);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -47,7 +49,7 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
 
                   // Speakers grid - extends all the way to bottom
                   Expanded(
-                    child: _buildSpeakersGrid(onboardingState, notifier),
+                    child: _buildSpeakersGrid(speakers, isLoading, error),
                   ),
                 ],
               ),
@@ -82,7 +84,7 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.all(24.0),
-                child: _buildContinueButton(onboardingState, notifier),
+                child: _buildContinueButton(speakers),
               ),
             ),
           ],
@@ -152,10 +154,11 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
   }
 
   Widget _buildSpeakersGrid(
-    OnboardingState state,
-    OnboardingNotifier notifier,
+    List<Speaker> speakers,
+    bool isLoading,
+    String? error,
   ) {
-    if (state.isLoading) {
+    if (isLoading) {
       return const Center(
         child: CircularProgressIndicator(
           valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
@@ -163,16 +166,24 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
       );
     }
 
-    if (state.error != null) {
+    if (error != null) {
       return Center(
-        child: Text(
-          'Error: ${state.error}',
-          style: const TextStyle(color: Colors.red),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Error: $error', style: const TextStyle(color: Colors.red)),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed:
+                  () => ref.read(questionNotifierProvider.notifier).retry(),
+              child: const Text('Retry'),
+            ),
+          ],
         ),
       );
     }
 
-    if (state.speakers.isEmpty) {
+    if (speakers.isEmpty) {
       return const Center(
         child: Text(
           'No speakers found.',
@@ -180,9 +191,6 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
         ),
       );
     }
-
-    // Use speakers from the provider
-    final speakers = state.speakers;
 
     // Group speakers into rows of 3
     final List<List<Speaker>> rows = [];
@@ -202,9 +210,6 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
             children: List.generate(3, (colIndex) {
               if (colIndex < row.length) {
                 final speaker = row[colIndex];
-                final isSelected = state.selectedSpeakerIds.contains(
-                  speaker.id,
-                );
                 return Expanded(
                   child: SizedBox(
                     height:
@@ -219,9 +224,11 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
                         ),
                         // Speaker card centered in the reserved space
                         SpeakerCard(
-                          speaker: speaker.copyWith(isSelected: isSelected),
+                          speaker: speaker,
                           onTap:
-                              () => notifier.toggleSpeakerSelection(speaker.id),
+                              () => ref
+                                  .read(questionNotifierProvider.notifier)
+                                  .toggleSpeaker(speaker.id),
                         ),
                       ],
                     ),
@@ -237,11 +244,8 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
     );
   }
 
-  Widget _buildContinueButton(
-    OnboardingState state,
-    OnboardingNotifier notifier,
-  ) {
-    final hasSelection = state.selectedSpeakerIds.isNotEmpty;
+  Widget _buildContinueButton(List<Speaker> speakers) {
+    final hasSelection = speakers.any((s) => s.isSelected);
 
     return SizedBox(
       width: double.infinity,
@@ -250,7 +254,6 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
         onPressed:
             hasSelection
                 ? () {
-                  notifier.nextStep();
                   // Use callback if provided, otherwise use default navigation
                   if (widget.onNext != null) {
                     widget.onNext!();

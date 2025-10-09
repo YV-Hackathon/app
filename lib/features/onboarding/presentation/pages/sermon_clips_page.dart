@@ -5,8 +5,11 @@ import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 import '../../domain/entities/sermon_clip.dart';
-import '../../domain/entities/speaker.dart';
 import '../providers/sermon_clips_provider.dart';
+import '../providers/sermon_recommendation_provider.dart';
+import '../providers/sermon_preference_provider.dart';
+import '../../data/models/sermon_recommendation_mapper.dart';
+import '../../data/models/sermon_preference_request.dart';
 
 class SermonClipsPage extends ConsumerStatefulWidget {
   final VoidCallback? onNext;
@@ -22,7 +25,7 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
   late final CardSwiperController _cardSwiperController;
   late final AnimationController _fadeController;
   late final Animation<double> _fadeAnimation;
-  late final List<SermonClip> _sermonClips;
+  final List<SermonClip> _sermonClips = [];
 
   bool _isExpanded = false;
   bool _hasTriggeredCompletion =
@@ -36,15 +39,8 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
   @override
   void initState() {
     super.initState();
-    _sermonClips = _getMockSermonClips();
-
-    // Initialize provider state
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(sermonClipsProvider.notifier).initialize(_sermonClips.length);
-    });
 
     _cardSwiperController = CardSwiperController();
-    _initializeVideo();
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
@@ -145,9 +141,69 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
 
   @override
   Widget build(BuildContext context) {
+    // Fetch recommendations from API
+    final recommendationsAsync = ref.watch(
+      sermonRecommendationNotifierProvider(6),
+    );
+
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
-      body: _buildBody(),
+      body: recommendationsAsync.when(
+        data: (response) {
+          // Convert API response to SermonClip entities
+          final sermonClips = response.toSermonClips();
+
+          // Update local sermon clips if they changed
+          if (_sermonClips.isEmpty ||
+              _sermonClips.length != sermonClips.length) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) {
+                setState(() {
+                  _sermonClips.clear();
+                  _sermonClips.addAll(sermonClips);
+                });
+                ref
+                    .read(sermonClipsProvider.notifier)
+                    .initialize(sermonClips.length);
+                _initializeVideo();
+              }
+            });
+          }
+
+          return _buildBody();
+        },
+        loading:
+            () => const Center(
+              child: CircularProgressIndicator(color: Color(0xFF3BC175)),
+            ),
+        error:
+            (error, stack) => Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Error loading recommendations',
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    error.toString(),
+                    style: const TextStyle(color: Colors.grey, fontSize: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () {
+                      ref.invalidate(sermonRecommendationNotifierProvider(6));
+                    },
+                    child: const Text('Retry'),
+                  ),
+                ],
+              ),
+            ),
+      ),
     );
   }
 
@@ -158,17 +214,42 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
       return const SizedBox.shrink(); // Empty, no loading indicator
     }
 
+    // If sermon clips not loaded yet
+    if (_sermonClips.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
     // Build the card swiper
     return CardSwiper(
       controller: _cardSwiperController,
       cardsCount: _sermonClips.length,
       onSwipe: (previousIndex, currentIndex, direction) {
         // Early exit if already completed or not mounted
-        if (!mounted || _hasTriggeredCompletion) return;
+        if (!mounted || _hasTriggeredCompletion || previousIndex == null)
+          return;
 
         print(
           'Card $previousIndex swiped to the ${direction.name}. currentIndex: $currentIndex',
         );
+
+        // Submit preference based on swipe direction
+        final swipedSermon = _sermonClips[previousIndex];
+        final preference =
+            direction.name == 'right'
+                ? SermonPreference.thumbsUp
+                : SermonPreference.thumbsDown;
+
+        // Parse sermon ID safely
+        final sermonId = int.tryParse(swipedSermon.id);
+        if (sermonId != null) {
+          ref
+              .read(sermonPreferenceNotifierProvider.notifier)
+              .submitPreference(
+                userId: 6,
+                sermonId: sermonId,
+                preference: preference,
+              );
+        }
 
         // Update remaining videos count (don't go below 0)
         ref.read(sermonClipsProvider.notifier).decrementRemainingCards();
@@ -269,7 +350,7 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
 
           // App Name
           const Text(
-            'App Name',
+            'PewPal',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -637,6 +718,19 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
           child: GestureDetector(
             onTap: () {
               if (!_hasTriggeredCompletion && mounted) {
+                // Submit thumbs_down preference for skip
+                final currentSermon = _sermonClips[_currentVideoIndex];
+                final sermonId = int.tryParse(currentSermon.id);
+                if (sermonId != null) {
+                  ref
+                      .read(sermonPreferenceNotifierProvider.notifier)
+                      .submitPreference(
+                        userId: 6,
+                        sermonId: sermonId,
+                        preference: SermonPreference.thumbsDown,
+                      );
+                }
+
                 _cardSwiperController.swipeLeft();
               }
             },
@@ -666,6 +760,19 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
         GestureDetector(
           onTap: () {
             if (!_hasTriggeredCompletion && mounted) {
+              // Submit thumbs_down preference
+              final currentSermon = _sermonClips[_currentVideoIndex];
+              final sermonId = int.tryParse(currentSermon.id);
+              if (sermonId != null) {
+                ref
+                    .read(sermonPreferenceNotifierProvider.notifier)
+                    .submitPreference(
+                      userId: 6,
+                      sermonId: sermonId,
+                      preference: SermonPreference.thumbsDown,
+                    );
+              }
+
               _cardSwiperController.swipeLeft();
             }
           },
@@ -686,6 +793,19 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
         GestureDetector(
           onTap: () {
             if (!_hasTriggeredCompletion && mounted) {
+              // Submit thumbs_up preference
+              final currentSermon = _sermonClips[_currentVideoIndex];
+              final sermonId = int.tryParse(currentSermon.id);
+              if (sermonId != null) {
+                ref
+                    .read(sermonPreferenceNotifierProvider.notifier)
+                    .submitPreference(
+                      userId: 6,
+                      sermonId: sermonId,
+                      preference: SermonPreference.thumbsUp,
+                    );
+              }
+
               _cardSwiperController.swipeRight();
             }
           },
@@ -707,140 +827,5 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
     final minutes = duration.inMinutes;
     final seconds = duration.inSeconds % 60;
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
-  }
-
-  List<SermonClip> _getMockSermonClips() {
-    return <SermonClip>[
-      SermonClip(
-        id: '1',
-        title: 'The Gift of the Gospel',
-        videoUrl:
-            'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4',
-        thumbnailUrl:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop',
-        description:
-            'In this message, Pastor John McArthur explores how the good news of Jesus is more than a story from the past—it\'s a present reality that transforms our lives today. Through Scripture and practical examples, he unpacks the depth of God\'s grace, the power of forgiveness, and the hope that comes from living in the freedom Christ offers.',
-        speaker: const Speaker(
-          id: '1',
-          name: 'John McArthur',
-          imageUrl:
-              'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-        ),
-        churchName: 'Grace Community Church',
-        churchLogo:
-            'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
-        duration: const Duration(minutes: 1, seconds: 20),
-        currentTime: const Duration(seconds: 12),
-        publishedAt: DateTime.now().subtract(const Duration(days: 2)),
-        viewCount: 15420,
-        likeCount: 892,
-        attributes: ['Attribute', 'Attribute', 'Attribute'],
-        matchingPreferences: 3,
-      ),
-      SermonClip(
-        id: '2',
-        title: 'Walking in Faith',
-        videoUrl:
-            'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_2mb.mp4',
-        thumbnailUrl:
-            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400&h=300&fit=crop',
-        description:
-            'Discover the transformative power of faith and how it can change your life completely. This message explores the depth of God\'s love and the hope that comes from living in His grace.',
-        speaker: const Speaker(
-          id: '2',
-          name: 'Craig Groeschel',
-          imageUrl:
-              'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
-        ),
-        churchName: 'Life.Church',
-        churchLogo:
-            'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
-        duration: const Duration(minutes: 1, seconds: 45),
-        currentTime: const Duration(seconds: 30),
-        publishedAt: DateTime.now().subtract(const Duration(days: 5)),
-        viewCount: 28930,
-        likeCount: 1245,
-        attributes: ['Faith', 'Hope', 'Grace'],
-        matchingPreferences: 2,
-      ),
-      SermonClip(
-        id: '3',
-        title: 'The Love of God',
-        videoUrl:
-            'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_5mb.mp4',
-        thumbnailUrl:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop',
-        description:
-            'Experience the overwhelming love of God that transforms hearts and changes lives. God\'s love is unconditional, unfailing, and everlasting.',
-        speaker: const Speaker(
-          id: '3',
-          name: 'John Piper',
-          imageUrl:
-              'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face',
-        ),
-        churchName: 'Bethlehem Baptist Church',
-        churchLogo:
-            'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
-        duration: const Duration(minutes: 2, seconds: 15),
-        currentTime: const Duration(seconds: 45),
-        publishedAt: DateTime.now().subtract(const Duration(days: 1)),
-        viewCount: 45670,
-        likeCount: 2103,
-        attributes: ['Love', 'Grace', 'Redemption'],
-        matchingPreferences: 4,
-      ),
-      SermonClip(
-        id: '4',
-        title: 'Purpose and Calling',
-        videoUrl:
-            'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_3mb.mp4',
-        thumbnailUrl:
-            'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop',
-        description:
-            'Discover your God-given purpose and learn how to walk in it with confidence. Every person has a unique calling and destiny that God has prepared for them.',
-        speaker: const Speaker(
-          id: '4',
-          name: 'Christine Caine',
-          imageUrl:
-              'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=150&h=150&fit=crop&crop=face',
-        ),
-        churchName: 'Hillsong Church',
-        churchLogo:
-            'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop',
-        duration: const Duration(minutes: 1, seconds: 30),
-        currentTime: const Duration(seconds: 20),
-        publishedAt: DateTime.now().subtract(const Duration(days: 3)),
-        viewCount: 32150,
-        likeCount: 1567,
-        attributes: ['Purpose', 'Calling', 'Destiny'],
-        matchingPreferences: 3,
-      ),
-      SermonClip(
-        id: '5',
-        title: 'The Power of Prayer',
-        videoUrl:
-            'https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_4mb.mp4',
-        thumbnailUrl:
-            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&h=300&fit=crop',
-        description:
-            'Learn about the transformative power of prayer and how it can change your life and the lives of those around you. Prayer is not just asking for things, but building a relationship with God.',
-        speaker: const Speaker(
-          id: '5',
-          name: 'Timothy Keller',
-          imageUrl:
-              'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150&h=150&fit=crop&crop=face',
-        ),
-        churchName: 'Redeemer Presbyterian',
-        churchLogo:
-            'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
-        duration: const Duration(minutes: 1, seconds: 55),
-        currentTime: const Duration(seconds: 35),
-        publishedAt: DateTime.now().subtract(const Duration(days: 4)),
-        viewCount: 28750,
-        likeCount: 1342,
-        attributes: ['Prayer', 'Relationship', 'Faith'],
-        matchingPreferences: 2,
-      ),
-    ];
   }
 }
