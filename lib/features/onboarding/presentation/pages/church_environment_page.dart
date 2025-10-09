@@ -289,19 +289,15 @@ class _ChurchEnvironmentPageState extends ConsumerState<ChurchEnvironmentPage> {
         onPressed:
             hasSelection
                 ? () async {
-                  // Submit onboarding in background
+                  // Submit onboarding and wait for response
                   print('🚀 Triggering onboarding submission...');
-                  ref
+                  await ref
                       .read(onboardingSubmissionNotifierProvider.notifier)
                       .submitOnboarding();
 
-                  // Pre-fetch sermon recommendations in background
-                  print('🎬 Pre-fetching sermon recommendations...');
-                  ref
-                      .read(sermonRecommendationNotifierProvider(6).notifier)
-                      .refresh(6);
+                  print('✅ Onboarding submission completed, navigating...');
 
-                  // Navigate immediately (don't wait for response)
+                  // Navigate after submission completes
                   if (widget.onNext != null) {
                     widget.onNext!();
                   } else if (mounted) {

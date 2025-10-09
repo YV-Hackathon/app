@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,9 +7,10 @@ import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
 import '../../domain/entities/sermon_clip.dart';
 import '../providers/sermon_clips_provider.dart';
-import '../providers/sermon_recommendation_provider.dart';
+import '../providers/onboarding_submission_provider.dart';
 import '../providers/sermon_preference_provider.dart';
-import '../../data/models/sermon_recommendation_mapper.dart';
+import '../../data/models/onboarding_submission_response.dart';
+import '../../data/models/recommended_sermon_mapper.dart';
 import '../../data/models/sermon_preference_request.dart';
 
 class SermonClipsPage extends ConsumerStatefulWidget {
@@ -35,6 +37,9 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
   VideoPlayerController? _videoController;
   bool _isVideoInitialized = false;
   int _currentVideoIndex = 0;
+  bool _showPlayPauseIcon = false;
+  Timer? _iconTimer;
+  bool _isLoadingVideo = false;
 
   @override
   void initState() {
@@ -54,7 +59,9 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
   @override
   void dispose() {
     _fadeController.dispose();
+    _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
+    _iconTimer?.cancel();
 
     // Only dispose if not already disposed in _handleComplete
     if (!_hasTriggeredCompletion) {
@@ -68,37 +75,112 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
     super.dispose();
   }
 
+  void _showIconTemporarily({required bool isPlaying}) {
+    // Cancel any existing timer
+    _iconTimer?.cancel();
+
+    // Show the icon
+    setState(() {
+      _showPlayPauseIcon = true;
+    });
+
+    // If playing, hide the pause icon after 2 seconds
+    // If paused, keep the play icon visible
+    if (isPlaying) {
+      _iconTimer = Timer(const Duration(seconds: 2), () {
+        if (mounted) {
+          setState(() {
+            _showPlayPauseIcon = false;
+          });
+        }
+      });
+    }
+    // If paused, icon stays visible (no timer)
+  }
+
   void _initializeVideo() {
     if (_sermonClips.isNotEmpty) {
+      setState(() {
+        _isLoadingVideo = true;
+      });
+
       _videoController = VideoPlayerController.networkUrl(
         Uri.parse(_sermonClips[_currentVideoIndex].videoUrl),
       );
-      _videoController!.initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isVideoInitialized = true;
+      _videoController!
+          .initialize()
+          .then((_) {
+            if (mounted) {
+              setState(() {
+                _isVideoInitialized = true;
+                _isLoadingVideo = false;
+              });
+              // Listen to video position updates
+              _videoController!.addListener(_videoListener);
+              _videoController!.play();
+              // Show pause icon briefly when video starts playing
+              _showIconTemporarily(isPlaying: true);
+            }
+          })
+          .catchError((error) {
+            // Handle video loading error
+            if (mounted) {
+              setState(() {
+                _isLoadingVideo = false;
+              });
+            }
+            print('Error initializing video: $error');
           });
-          _videoController!.play();
-        }
-      });
+    }
+  }
+
+  void _videoListener() {
+    // Update UI when video position changes
+    if (mounted && _videoController != null) {
+      setState(() {});
     }
   }
 
   void _loadVideo(int index) {
     if (index < _sermonClips.length) {
+      // Set loading state
+      setState(() {
+        _isLoadingVideo = true;
+        _isVideoInitialized = false;
+      });
+
+      // Remove listener from old controller before disposing
+      _videoController?.removeListener(_videoListener);
       _videoController?.dispose();
+
       _videoController = VideoPlayerController.networkUrl(
         Uri.parse(_sermonClips[index].videoUrl),
       );
-      _videoController!.initialize().then((_) {
-        if (mounted) {
-          setState(() {
-            _isVideoInitialized = true;
-            _currentVideoIndex = index;
+      _videoController!
+          .initialize()
+          .then((_) {
+            if (mounted) {
+              setState(() {
+                _isVideoInitialized = true;
+                _currentVideoIndex = index;
+                _isLoadingVideo = false;
+              });
+              // Listen to video position updates
+              _videoController!.addListener(_videoListener);
+              _videoController!.play();
+              // Show pause icon briefly when new video starts playing
+              _showIconTemporarily(isPlaying: true);
+            }
+          })
+          .catchError((error) {
+            // Handle video loading error
+            if (mounted) {
+              setState(() {
+                _isLoadingVideo = false;
+              });
+            }
+            print('Error loading video: $error');
           });
-          _videoController!.play();
-        }
-      });
     }
   }
 
@@ -141,82 +223,171 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
 
   @override
   Widget build(BuildContext context) {
-    // Fetch recommendations from API
-    final recommendationsAsync = ref.watch(
-      sermonRecommendationNotifierProvider(6),
+    // Get recommended sermons from onboarding submission
+    final recommendedSermons = ref.watch(recommendedSermonsProvider);
+    final submissionState = ref.watch(onboardingSubmissionNotifierProvider);
+
+    print('🎬 SermonClipsPage build');
+    print('📊 Submission status: ${submissionState.status}');
+    print('📦 Response object: ${submissionState.response}');
+    print(
+      '🎬 Recommended sermons in response: ${submissionState.response?.recommendedSermons?.length ?? 0}',
     );
+    print('📊 Recommended sermons from provider: ${recommendedSermons.length}');
+
+    if (recommendedSermons.isNotEmpty) {
+      print('✅ Found ${recommendedSermons.length} sermons:');
+      for (var i = 0; i < recommendedSermons.length && i < 3; i++) {
+        print('  - Sermon $i: ${recommendedSermons[i].title}');
+      }
+    } else {
+      print('⚠️ No sermons found in provider');
+    }
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
-      body: recommendationsAsync.when(
-        data: (response) {
-          // Convert API response to SermonClip entities
-          final sermonClips = response.toSermonClips();
-
-          // Update local sermon clips if they changed
-          if (_sermonClips.isEmpty ||
-              _sermonClips.length != sermonClips.length) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                setState(() {
-                  _sermonClips.clear();
-                  _sermonClips.addAll(sermonClips);
-                });
-                ref
-                    .read(sermonClipsProvider.notifier)
-                    .initialize(sermonClips.length);
-                _initializeVideo();
-              }
-            });
-          }
-
-          return _buildBody();
-        },
-        loading:
-            () => const Center(
-              child: CircularProgressIndicator(color: Color(0xFF3BC175)),
-            ),
-        error:
-            (error, stack) => Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Error loading recommendations',
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    error.toString(),
-                    style: const TextStyle(color: Colors.grey, fontSize: 12),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      ref.invalidate(sermonRecommendationNotifierProvider(6));
-                    },
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            ),
+      body: _buildBodyFromSubmission(
+        recommendedSermons,
+        submissionState.status,
       ),
     );
   }
 
+  Widget _buildBodyFromSubmission(
+    List<RecommendedSermon> recommendedSermons,
+    SubmissionStatus status,
+  ) {
+    // Show loading if submission is still in progress
+    if (status == SubmissionStatus.submitting) {
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF3BC175)),
+      );
+    }
+
+    // Show error if submission failed
+    if (status == SubmissionStatus.error) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 48),
+            const SizedBox(height: 16),
+            const Text(
+              'Error loading recommendations',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Failed to get sermon recommendations',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref.read(onboardingSubmissionNotifierProvider.notifier).reset();
+                context.go('/onboarding');
+              },
+              child: const Text('Restart Onboarding'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Convert recommended sermons to sermon clips
+    print(
+      '🔄 Converting ${recommendedSermons.length} recommended sermons to clips...',
+    );
+
+    final sermonClips = recommendedSermons.toSermonClips();
+
+    print('🎥 Total sermon clips after conversion: ${sermonClips.length}');
+    for (var i = 0; i < sermonClips.length; i++) {
+      print(
+        '  - Sermon $i: ${sermonClips[i].title} (${sermonClips[i].speaker.name})',
+      );
+    }
+
+    // If no sermon clips available
+    print('❓ Checking if sermonClips is empty: ${sermonClips.isEmpty}');
+    if (sermonClips.isEmpty) {
+      print('⚠️ SHOWING NO SERMONS SCREEN - sermonClips is empty!');
+      print('   Status: $status');
+      print('   Recommended sermons count: ${recommendedSermons.length}');
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.movie_filter_outlined,
+              color: Colors.grey,
+              size: 48,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'No sermon recommendations available',
+              style: TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Please complete onboarding to get personalized recommendations',
+              style: TextStyle(color: Colors.grey, fontSize: 12),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                context.go('/onboarding');
+              },
+              child: const Text('Go to Onboarding'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Update local sermon clips if they changed
+    if (_sermonClips.isEmpty || _sermonClips.length != sermonClips.length) {
+      print(
+        '🔄 Updating local _sermonClips from ${_sermonClips.length} to ${sermonClips.length}',
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _sermonClips.clear();
+            _sermonClips.addAll(sermonClips);
+          });
+          ref.read(sermonClipsProvider.notifier).initialize(sermonClips.length);
+          _initializeVideo();
+          print('✅ Local _sermonClips updated successfully');
+        }
+      });
+
+      // Important: Return loading indicator while we wait for the callback to update _sermonClips
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF3BC175)),
+      );
+    }
+
+    return _buildBody();
+  }
+
   Widget _buildBody() {
+    print('🏗️ Building body with ${_sermonClips.length} sermon clips');
+
     // If completion triggered, show empty screen (removes CardSwiper from tree)
     // This prevents CardSwiper from continuing to use the disposed controller
     if (_hasTriggeredCompletion) {
       return const SizedBox.shrink(); // Empty, no loading indicator
     }
 
-    // If sermon clips not loaded yet
+    // If sermon clips not loaded yet (this should not happen now)
     if (_sermonClips.isEmpty) {
-      return const SizedBox.shrink();
+      print('⚠️ _sermonClips is empty in _buildBody!');
+      return const Center(
+        child: CircularProgressIndicator(color: Color(0xFF3BC175)),
+      );
     }
 
     // Build the card swiper
@@ -339,11 +510,7 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
           Container(
             width: 42,
             height: 42,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.church, color: Color(0xFF121212), size: 24),
+            child: Image.asset('assets/images/app_logo.png'),
           ),
 
           const SizedBox(width: 12),
@@ -382,53 +549,69 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
       child: ClipRRect(
         borderRadius: BorderRadius.circular(21),
         child:
-            _isVideoInitialized && _videoController != null
-                ? Stack(
-                  children: [
-                    // Video player
-                    SizedBox.expand(
-                      child: FittedBox(
-                        fit: BoxFit.cover,
-                        child: SizedBox(
-                          width: _videoController!.value.size.width,
-                          height: _videoController!.value.size.height,
-                          child: VideoPlayer(_videoController!),
-                        ),
-                      ),
-                    ),
-                    // Play/Pause overlay
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          if (_videoController!.value.isPlaying) {
-                            _videoController!.pause();
-                          } else {
-                            _videoController!.play();
-                          }
-                        },
-                        child: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.5),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _videoController!.value.isPlaying
-                                ? Icons.pause
-                                : Icons.play_arrow,
-                            color: Colors.white,
-                            size: 30,
+            _isVideoInitialized && _videoController != null && !_isLoadingVideo
+                ? GestureDetector(
+                  onTap: () {
+                    final wasPlaying = _videoController!.value.isPlaying;
+                    setState(() {
+                      if (wasPlaying) {
+                        _videoController!.pause();
+                      } else {
+                        _videoController!.play();
+                      }
+                    });
+                    // Pass the NEW state (opposite of what it was)
+                    _showIconTemporarily(isPlaying: !wasPlaying);
+                  },
+                  child: Stack(
+                    children: [
+                      // Video player
+                      SizedBox.expand(
+                        child: FittedBox(
+                          fit: BoxFit.cover,
+                          child: SizedBox(
+                            width: _videoController!.value.size.width,
+                            height: _videoController!.value.size.height,
+                            child: VideoPlayer(_videoController!),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      // Loading overlay when transitioning
+                      if (_isLoadingVideo)
+                        Container(
+                          color: const Color(0xFF232121),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFF3BC175),
+                            ),
+                          ),
+                        ),
+                      // Play/Pause overlay - only show temporarily
+                      if (_showPlayPauseIcon && !_isLoadingVideo)
+                        Center(
+                          child: Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _videoController!.value.isPlaying
+                                  ? Icons.pause
+                                  : Icons.play_arrow,
+                              color: Colors.white,
+                              size: 30,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 )
                 : Container(
                   color: const Color(0xFF232121),
                   child: const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
+                    child: CircularProgressIndicator(color: Color(0xFF3BC175)),
                   ),
                 ),
       ),
@@ -436,13 +619,27 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
   }
 
   Widget _buildAudioScrubber(SermonClip sermonClip) {
+    // Get real-time video position and duration
+    final position = _videoController?.value.position ?? Duration.zero;
+    final duration = _videoController?.value.duration ?? Duration.zero;
+    final remaining = duration - position;
+
+    // Calculate progress percentage
+    final progress =
+        duration.inMilliseconds > 0
+            ? (position.inMilliseconds / duration.inMilliseconds).clamp(
+              0.0,
+              1.0,
+            )
+            : 0.0;
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 8),
       child: Row(
         children: [
           // Current time
           Text(
-            _formatDuration(sermonClip.currentTime),
+            _formatDuration(position),
             style: const TextStyle(
               color: Colors.white,
               fontSize: 9,
@@ -454,46 +651,56 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
 
           // Progress bar
           Expanded(
-            child: Container(
-              height: 2,
-              decoration: BoxDecoration(
-                color: const Color(0xFF474545),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Stack(
-                children: [
-                  // Progress
-                  Container(
-                    width: 64, // This would be calculated based on progress
-                    height: 2,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                    ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final progressWidth = constraints.maxWidth * progress;
+                final handlePosition = (progressWidth - 6).clamp(
+                  0.0,
+                  constraints.maxWidth - 12,
+                );
+
+                return Container(
+                  height: 2,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF474545),
+                    borderRadius: BorderRadius.circular(16),
                   ),
-                  // Handle
-                  Positioned(
-                    left: 59,
-                    top: -5,
-                    child: Container(
-                      width: 12,
-                      height: 12,
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
+                  child: Stack(
+                    children: [
+                      // Progress
+                      Container(
+                        width: progressWidth,
+                        height: 2,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
-                    ),
+                      // Handle
+                      Positioned(
+                        left: handlePosition,
+                        top: -5,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                );
+              },
             ),
           ),
 
           const SizedBox(width: 7),
 
-          // Total time
+          // Time remaining
           Text(
-            '-${_formatDuration(sermonClip.duration - sermonClip.currentTime)}',
+            '-${_formatDuration(remaining)}',
             style: const TextStyle(
               color: Colors.white,
               fontSize: 9,
