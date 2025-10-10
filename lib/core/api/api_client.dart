@@ -8,6 +8,7 @@ import '../../features/onboarding/data/models/sermon_preference_request.dart';
 import '../../features/onboarding/data/models/sermon_preference_response.dart';
 import '../../features/churches/data/models/church_recommendation_response.dart';
 import '../../features/churches/data/models/church_model.dart';
+import '../../features/churches/data/models/featured_sermons_response.dart';
 
 part 'api_client.g.dart';
 
@@ -46,4 +47,9 @@ abstract class ApiClient {
 
   @GET('/api/v1/churches/{church_id}')
   Future<ChurchModel> getChurch(@Path('church_id') int churchId);
+
+  @GET('/api/v1/featured-sermons/churches/{church_id}/featured-sermons')
+  Future<FeaturedSermonsResponse> getFeaturedSermons(
+    @Path('church_id') int churchId,
+  );
 }

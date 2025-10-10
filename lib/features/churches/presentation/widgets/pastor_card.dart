@@ -27,7 +27,7 @@ class PastorCard extends StatelessWidget {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 image: DecorationImage(
-                  image: AssetImage(pastor.imageUrl),
+                  image: NetworkImage(pastor.imageUrl),
                   fit: BoxFit.cover,
                 ),
               ),
