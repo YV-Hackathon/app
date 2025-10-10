@@ -221,90 +221,46 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
         ),
         const SizedBox(height: 16),
 
-        // Church attributes (using denomination and founded year as attributes)
-        SizedBox(
-          height: 36, // Fixed height to prevent layout shifts
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                children: [
-                  // Denomination as an attribute
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF474545)),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        churchDetail.denomination,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                          fontFamily: 'Aktiv Grotesk App',
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Founded year as an attribute
-                  if (churchDetail.foundedYear != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFF474545)),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Founded ${churchDetail.foundedYear}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.white,
-                            fontFamily: 'Aktiv Grotesk App',
+        // Church attributes from the new attributes property
+        if (churchDetail.attributes.isNotEmpty)
+          SizedBox(
+            height: 36, // Fixed height to prevent layout shifts
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  children:
+                      churchDetail.attributes.map((attribute) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFF474545),
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              attribute,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.white,
+                                fontFamily: 'Aktiv Grotesk App',
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  // Active status as an attribute
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF474545)),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        churchDetail.isActive ? 'Active' : 'Inactive',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                          fontFamily: 'Aktiv Grotesk App',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                        );
+                      }).toList(),
+                ),
               ),
             ),
           ),
-        ),
         const SizedBox(height: 16),
 
         // Church description

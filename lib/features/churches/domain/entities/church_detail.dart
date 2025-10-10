@@ -12,6 +12,7 @@ class ChurchDetail {
   final ServiceTimes? serviceTimes;
   final SocialMedia? socialMedia;
   final String? imageUrl;
+  final List<String> attributes;
   final bool isActive;
   final int sortOrder;
   final List<Speaker> speakers;
@@ -32,6 +33,7 @@ class ChurchDetail {
     this.serviceTimes,
     this.socialMedia,
     this.imageUrl,
+    this.attributes = const [],
     this.isActive = true,
     this.sortOrder = 0,
     this.speakers = const [],
@@ -53,6 +55,7 @@ class ChurchDetail {
     ServiceTimes? serviceTimes,
     SocialMedia? socialMedia,
     String? imageUrl,
+    List<String>? attributes,
     bool? isActive,
     int? sortOrder,
     List<Speaker>? speakers,
@@ -73,6 +76,7 @@ class ChurchDetail {
       serviceTimes: serviceTimes ?? this.serviceTimes,
       socialMedia: socialMedia ?? this.socialMedia,
       imageUrl: imageUrl ?? this.imageUrl,
+      attributes: attributes ?? this.attributes,
       isActive: isActive ?? this.isActive,
       sortOrder: sortOrder ?? this.sortOrder,
       speakers: speakers ?? this.speakers,
@@ -239,6 +243,7 @@ class Speaker {
   final EnvironmentStyle environmentStyle;
   final Gender? gender;
   final String? profilePictureUrl;
+  final List<String>? attributes;
   final bool isRecommended;
   final int? churchId;
   final String createdAt;
@@ -260,6 +265,7 @@ class Speaker {
     this.environmentStyle = EnvironmentStyle.blended,
     this.gender,
     this.profilePictureUrl,
+    this.attributes,
     this.isRecommended = false,
     this.churchId,
     required this.createdAt,
@@ -282,6 +288,7 @@ class Speaker {
     EnvironmentStyle? environmentStyle,
     Gender? gender,
     String? profilePictureUrl,
+    List<String>? attributes,
     bool? isRecommended,
     int? churchId,
     String? createdAt,
@@ -303,6 +310,7 @@ class Speaker {
       environmentStyle: environmentStyle ?? this.environmentStyle,
       gender: gender ?? this.gender,
       profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      attributes: attributes ?? this.attributes,
       isRecommended: isRecommended ?? this.isRecommended,
       churchId: churchId ?? this.churchId,
       createdAt: createdAt ?? this.createdAt,
