@@ -5,10 +5,10 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_fonts.dart';
 import '../../domain/entities/church_detail.dart';
 import '../../domain/entities/pastor.dart';
-import '../../domain/entities/sermon.dart';
 import '../widgets/pastor_card.dart';
 import '../widgets/sermon_card.dart';
 import '../providers/church_detail_provider.dart';
+import '../providers/featured_sermons_provider.dart';
 
 class ChurchProfilePage extends ConsumerStatefulWidget {
   final int churchId;
@@ -116,13 +116,8 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
                 decoration: BoxDecoration(
                   image: DecorationImage(
                     image:
-                        churchDetail.imageUrl != null &&
-                                churchDetail.imageUrl!.isNotEmpty
-                            ? NetworkImage(churchDetail.imageUrl!)
-                            : const AssetImage(
-                                  'assets/images/church_avatars/church_avatar_1.png',
-                                )
-                                as ImageProvider,
+                        AssetImage('assets/images/LCImage.png')
+                            as ImageProvider,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -142,7 +137,7 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
                 // Pastors section with padding
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: _buildPastorsSection(context),
+                  child: _buildPastorsSection(context, churchDetail),
                 ),
                 const SizedBox(height: 32),
 
@@ -226,90 +221,46 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
         ),
         const SizedBox(height: 16),
 
-        // Church attributes (using denomination and founded year as attributes)
-        SizedBox(
-          height: 36, // Fixed height to prevent layout shifts
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0),
-              child: Row(
-                children: [
-                  // Denomination as an attribute
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF474545)),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        churchDetail.denomination,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                          fontFamily: 'Aktiv Grotesk App',
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Founded year as an attribute
-                  if (churchDetail.foundedYear != null)
-                    Padding(
-                      padding: const EdgeInsets.only(right: 8),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: const Color(0xFF474545)),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Founded ${churchDetail.foundedYear}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.white,
-                            fontFamily: 'Aktiv Grotesk App',
+        // Church attributes from the new attributes property
+        if (churchDetail.attributes.isNotEmpty)
+          SizedBox(
+            height: 36, // Fixed height to prevent layout shifts
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                child: Row(
+                  children:
+                      churchDetail.attributes.map((attribute) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: const Color(0xFF474545),
+                              ),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Text(
+                              attribute,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.white,
+                                fontFamily: 'Aktiv Grotesk App',
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
-                  // Active status as an attribute
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: const Color(0xFF474545)),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        churchDetail.isActive ? 'Active' : 'Inactive',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.white,
-                          fontFamily: 'Aktiv Grotesk App',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+                        );
+                      }).toList(),
+                ),
               ),
             ),
           ),
-        ),
         const SizedBox(height: 16),
 
         // Church description
@@ -325,6 +276,8 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
                 fontFamily: 'Aktiv Grotesk App',
                 height: 1.5,
               ),
+              maxLines: 5,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         const SizedBox(height: 16),
@@ -535,8 +488,8 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
     );
   }
 
-  Widget _buildPastorsSection(BuildContext context) {
-    final pastors = _getMockPastors();
+  Widget _buildPastorsSection(BuildContext context, ChurchDetail churchDetail) {
+    final pastors = _convertSpeakersToPastors(churchDetail.speakers);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -581,23 +534,38 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
           ],
         ),
         const SizedBox(height: 16),
-        ...pastors.map(
-          (pastor) => Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: PastorCard(
-              pastor: pastor,
-              onTap: () {
-                context.push('/pastor/${pastor.id}');
-              },
+        if (pastors.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 16.0),
+            child: Text(
+              'No pastors available',
+              style: TextStyle(
+                fontSize: 14,
+                color: Color(0xFFBFBDBD),
+                fontFamily: 'Aktiv Grotesk App',
+              ),
+            ),
+          )
+        else
+          ...pastors.map(
+            (pastor) => Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: PastorCard(
+                pastor: pastor,
+                onTap: () {
+                  context.push('/pastor/${pastor.id}');
+                },
+              ),
             ),
           ),
-        ),
       ],
     );
   }
 
   Widget _buildFeaturedSermonsSection() {
-    final sermons = _getMockSermons();
+    final featuredSermonsAsync = ref.watch(
+      featuredSermonsNotifierProvider(widget.churchId),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -646,92 +614,116 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
           ),
         ),
         const SizedBox(height: 16),
-        // Carousel without horizontal padding
-        SizedBox(
-          height: 200,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.only(left: 24.0, right: 24.0),
-            itemCount: sermons.length,
-            itemBuilder: (context, index) {
-              return Padding(
-                padding: EdgeInsets.only(
-                  right: index < sermons.length - 1 ? 16 : 0,
+        // Sermons content
+        featuredSermonsAsync.when(
+          data: (featuredSermonItems) {
+            if (featuredSermonItems.isEmpty) {
+              return const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                child: Text(
+                  'No featured sermons available',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Color(0xFFBFBDBD),
+                    fontFamily: 'Aktiv Grotesk App',
+                  ),
                 ),
-                child: SermonCard(sermon: sermons[index]),
               );
-            },
-          ),
+            }
+
+            return SizedBox(
+              height: 240, // Increased height to accommodate additional content
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(left: 24.0, right: 24.0),
+                itemCount: featuredSermonItems.length,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: EdgeInsets.only(
+                      right: index < featuredSermonItems.length - 1 ? 16 : 0,
+                    ),
+                    child: SermonCard.fromFeaturedSermon(
+                      featuredSermonItem: featuredSermonItems[index],
+                      onTap: () {
+                        // TODO: Navigate to sermon detail or play video
+                        print(
+                          'Tapped on sermon: ${featuredSermonItems[index].sermon.title}',
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+          loading:
+              () => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                child: Center(
+                  child: CircularProgressIndicator(color: AppColors.white),
+                ),
+              ),
+          error:
+              (error, stackTrace) => Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 32.0,
+                ),
+                child: Column(
+                  children: [
+                    const Text(
+                      'Failed to load featured sermons',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Color(0xFFBFBDBD),
+                        fontFamily: 'Aktiv Grotesk App',
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    ElevatedButton(
+                      onPressed: () {
+                        ref.invalidate(
+                          featuredSermonsNotifierProvider(widget.churchId),
+                        );
+                      },
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
         ),
       ],
     );
   }
 
-  List<Pastor> _getMockPastors() {
-    return [
-      const Pastor(
-        id: '1',
-        name: 'John McArthur',
-        title: 'Former Pastor',
-        imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
-        tenure: '1969-2025',
-        description:
-            'Former pastor with decades of experience in expository preaching.',
-        attributes: ['Expository', 'Author', 'Radio Host'],
-      ),
-      const Pastor(
-        id: '2',
-        name: 'Mike Riccardi',
-        title: 'Senior Pastor',
-        imageUrl: 'assets/images/church_avatars/church_avatar_2.png',
-        tenure: '2012-Present',
-        description:
-            'Current senior pastor focused on biblical teaching and discipleship.',
-        attributes: ['Expository', 'Discipleship', 'Teaching'],
-      ),
-      const Pastor(
-        id: '3',
-        name: 'Judy Kim',
-        title: "Woman's Pastor",
-        imageUrl: 'assets/images/church_avatars/church_avatar_3.png',
-        tenure: '2025-Present',
-        description:
-            'Women\'s ministry pastor dedicated to serving and equipping women.',
-        attributes: ['Women\'s Ministry', 'Discipleship', 'Community'],
-      ),
-    ];
-  }
+  List<Pastor> _convertSpeakersToPastors(List<Speaker> speakers) {
+    return speakers.map((speaker) {
+      // Convert years of service to tenure format
+      String? tenure;
+      if (speaker.yearsOfService != null) {
+        final currentYear = DateTime.now().year;
+        final startYear = currentYear - speaker.yearsOfService!;
+        tenure = '$startYear-Present';
+      }
 
-  List<Sermon> _getMockSermons() {
-    return [
-      const Sermon(
-        id: '1',
-        title: 'The Gift of the Gospel',
-        pastorName: 'John McArthur',
-        thumbnailUrl: 'assets/images/church_avatars/church_avatar_1.png',
-        duration: '36:24',
-      ),
-      const Sermon(
-        id: '2',
-        title: 'Free Will',
-        pastorName: 'John McArthur',
-        thumbnailUrl: 'assets/images/church_avatars/church_avatar_2.png',
-        duration: '46:12',
-      ),
-      const Sermon(
-        id: '3',
-        title: 'Back to School Summer Camp Devotional',
-        pastorName: 'Partner Name',
-        thumbnailUrl: 'assets/images/church_avatars/church_avatar_3.png',
-        duration: '6:24',
-      ),
-      const Sermon(
-        id: '4',
-        title: 'Desiring God',
-        pastorName: 'John McArthur',
-        thumbnailUrl: 'assets/images/church_avatars/church_avatar_4.png',
-        duration: '36:24',
-      ),
-    ];
+      // Convert speaking topics to attributes
+      final attributes =
+          speaker.speakingTopics.map((topic) => topic.name).toList();
+
+      // Use profile picture URL or fallback to default avatar
+      final imageUrl =
+          speaker.profilePictureUrl ??
+          'assets/images/church_avatars/church_avatar_1.png';
+
+      return Pastor(
+        id: speaker.id.toString(),
+        name: speaker.name,
+        title: speaker.title ?? 'Speaker',
+        imageUrl: imageUrl,
+        tenure: tenure,
+        description: speaker.bio ?? 'No description available',
+        attributes: attributes,
+      );
+    }).toList();
   }
 }

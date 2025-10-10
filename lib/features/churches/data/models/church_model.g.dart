@@ -28,6 +28,10 @@ _$ChurchModelImpl _$$ChurchModelImplFromJson(Map<String, dynamic> json) =>
           : SocialMediaModel.fromJson(
               json['social_media'] as Map<String, dynamic>),
       imageUrl: json['image_url'] as String?,
+      attributes: (json['attributes'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       isActive: json['is_active'] as bool? ?? true,
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
       speakers: (json['speakers'] as List<dynamic>?)
@@ -53,6 +57,7 @@ Map<String, dynamic> _$$ChurchModelImplToJson(_$ChurchModelImpl instance) =>
       'service_times': instance.serviceTimes,
       'social_media': instance.socialMedia,
       'image_url': instance.imageUrl,
+      'attributes': instance.attributes,
       'is_active': instance.isActive,
       'sort_order': instance.sortOrder,
       'speakers': instance.speakers,
@@ -170,6 +175,9 @@ _$SpeakerModelImpl _$$SpeakerModelImplFromJson(Map<String, dynamic> json) =>
       gender: _$JsonConverterFromJson<String, Gender>(
           json['gender'], const GenderConverter().fromJson),
       profilePictureUrl: json['profile_picture_url'] as String?,
+      attributes: (json['attributes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
       isRecommended: json['is_recommended'] as bool? ?? false,
       id: (json['id'] as num).toInt(),
       churchId: (json['church_id'] as num?)?.toInt(),
@@ -197,6 +205,7 @@ Map<String, dynamic> _$$SpeakerModelImplToJson(_$SpeakerModelImpl instance) =>
       'gender': _$JsonConverterToJson<String, Gender>(
           instance.gender, const GenderConverter().toJson),
       'profile_picture_url': instance.profilePictureUrl,
+      'attributes': instance.attributes,
       'is_recommended': instance.isRecommended,
       'id': instance.id,
       'church_id': instance.churchId,
