@@ -5,7 +5,6 @@ import '../../../../core/constants/app_fonts.dart';
 import '../../domain/entities/church.dart';
 import '../../domain/entities/church_section.dart';
 import '../widgets/church_list_item.dart';
-import '../widgets/filter_chips.dart';
 
 class SeeAllChurchesPage extends StatefulWidget {
   final ChurchSection section;
@@ -17,36 +16,9 @@ class SeeAllChurchesPage extends StatefulWidget {
 }
 
 class _SeeAllChurchesPageState extends State<SeeAllChurchesPage> {
-  List<String> _selectedFilters = [];
-  List<Church> _filteredChurches = [];
-
   @override
   void initState() {
     super.initState();
-    _filteredChurches = widget.section.churches;
-  }
-
-  void _onFiltersChanged(List<String> filters) {
-    setState(() {
-      _selectedFilters = filters;
-      _applyFilters();
-    });
-  }
-
-  void _applyFilters() {
-    if (_selectedFilters.isEmpty) {
-      _filteredChurches = widget.section.churches;
-    } else {
-      _filteredChurches =
-          widget.section.churches.where((church) {
-            return _selectedFilters.any(
-              (filter) => church.attributes.any(
-                (attribute) =>
-                    attribute.toLowerCase().contains(filter.toLowerCase()),
-              ),
-            );
-          }).toList();
-    }
   }
 
   void _onChurchTap(Church church) {
@@ -89,7 +61,7 @@ class _SeeAllChurchesPageState extends State<SeeAllChurchesPage> {
 
               // Results count
               Text(
-                'Showing ${_filteredChurches.length} results',
+                'Showing ${widget.section.churches.length} results',
                 style: const TextStyle(
                   fontSize: AppFonts.sm,
                   fontWeight: FontWeight.w400,
@@ -98,72 +70,25 @@ class _SeeAllChurchesPageState extends State<SeeAllChurchesPage> {
                 ),
               ),
 
-              const SizedBox(height: 16),
-
-              // Filter chips
-              FilterChips(
-                selectedFilters: _selectedFilters,
-                onFiltersChanged: _onFiltersChanged,
-              ),
-
               const SizedBox(height: 24),
 
               // Church list
-              if (_filteredChurches.isEmpty)
-                _buildEmptyState()
-              else
-                ..._filteredChurches.asMap().entries.map((entry) {
-                  final index = entry.key;
-                  final church = entry.value;
-                  final isLast = index == _filteredChurches.length - 1;
+              ...widget.section.churches.asMap().entries.map((entry) {
+                final index = entry.key;
+                final church = entry.value;
+                final isLast = index == widget.section.churches.length - 1;
 
-                  return ChurchListItem(
-                    church: church,
-                    onTap: () => _onChurchTap(church),
-                    showDivider: !isLast,
-                  );
-                }).toList(),
+                return ChurchListItem(
+                  church: church,
+                  onTap: () => _onChurchTap(church),
+                  showDivider: !isLast,
+                );
+              }).toList(),
 
               const SizedBox(height: 32),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      child: Column(
-        children: [
-          Icon(
-            Icons.search_off,
-            size: 64,
-            color: AppColors.white.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'No churches found',
-            style: TextStyle(
-              fontSize: AppFonts.lg,
-              fontWeight: FontWeight.bold,
-              color: AppColors.white.withOpacity(0.8),
-              fontFamily: 'DM Sans',
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Try adjusting your filters to see more results',
-            style: TextStyle(
-              fontSize: AppFonts.sm,
-              fontWeight: FontWeight.w400,
-              color: AppColors.white.withOpacity(0.6),
-              fontFamily: 'Aktiv Grotesk App',
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }

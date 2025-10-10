@@ -17,7 +17,8 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     // Navigate to onboarding after 10 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        context.go('/onboarding');
+        // context.go('/onboarding');
+        context.go('/home');
       }
     });
   }
