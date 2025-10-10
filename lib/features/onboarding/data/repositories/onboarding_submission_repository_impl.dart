@@ -20,7 +20,26 @@ class OnboardingSubmissionRepositoryImpl
       final response = await _apiClient.submitOnboarding(request);
 
       print('✅ Onboarding submission successful!');
-      print('📦 Response: ${response.toJson()}');
+      print('📦 Full Response JSON: ${response.toJson()}');
+
+      // Print recommended sermons specifically
+      if (response.recommendedSermons != null) {
+        print('🎬 RECOMMENDED SERMONS from API:');
+        print('   Count: ${response.recommendedSermons!.length}');
+        for (var i = 0; i < response.recommendedSermons!.length; i++) {
+          final sermon = response.recommendedSermons![i];
+          print('   [$i] Title: ${sermon.title}');
+          print('       Description: ${sermon.description}');
+          print('       Video URL: ${sermon.gcsUrl}');
+          print('       Speaker: ${sermon.speaker?.name ?? "No speaker"}');
+          print(
+            '       Church: ${sermon.speaker?.church?.name ?? "No church"}',
+          );
+          print('       ---');
+        }
+      } else {
+        print('⚠️ NO recommended_sermons in response!');
+      }
 
       return response;
     } catch (e, stackTrace) {
