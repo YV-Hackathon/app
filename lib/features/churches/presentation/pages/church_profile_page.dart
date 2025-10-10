@@ -99,7 +99,7 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
                   image: DecorationImage(
-                    image: AssetImage(widget.church.imageUrl),
+                    image: NetworkImage(widget.church.imageUrl),
                     fit: BoxFit.cover,
                   ),
                 ),

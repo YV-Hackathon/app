@@ -7,6 +7,7 @@ import 'survey_intro_page.dart';
 import 'simple_onboarding_page.dart';
 import 'question_page.dart';
 import 'teaching_style_page.dart';
+import 'gender_preference_page.dart';
 import 'church_environment_page.dart';
 import 'personalization_intro_page.dart';
 import 'personalization_instructions_page.dart';
@@ -68,10 +69,12 @@ class _UnifiedOnboardingPageState extends ConsumerState<UnifiedOnboardingPage> {
     return [
       WelcomeOnboardingPage(onNext: _nextPage),
       SurveyIntroPage(onNext: _nextPage),
-      SimpleOnboardingPage(onNext: _nextPage),
+
       QuestionPage(onNext: _nextPage),
       TeachingStylePage(onNext: _nextPage),
+      GenderPreferencePage(onNext: _nextPage),
       ChurchEnvironmentPage(onNext: _nextPage),
+      SimpleOnboardingPage(onNext: _nextPage),
       PersonalizationIntroPage(onNext: _nextPage),
       PersonalizationInstructionsPage(onNext: _nextPage),
       PlaylistInstructionsPage(onNext: _nextPage),

@@ -90,7 +90,7 @@ final hasRecommendedSermonsProvider = Provider<bool>.internal(
 // ignore: unused_element
 typedef HasRecommendedSermonsRef = ProviderRef<bool>;
 String _$onboardingSubmissionNotifierHash() =>
-    r'630966c3a6a617278f119b1cf366b19a0259fea1';
+    r'ee003c831c1dc0badeacd269b1a16f66266bf900';
 
 /// Submission Notifier
 ///

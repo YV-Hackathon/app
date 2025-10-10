@@ -50,7 +50,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
 
                       child: Center(
                         child: Image.asset(
-                          'assets/images/app_logo.png',
+                          'assets/images/Logo.png',
                           width: 108,
                           height: 108,
                         ),
@@ -63,8 +63,8 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                     const Text(
                       'PewPal',
                       style: TextStyle(
-                        fontSize: 25,
-                        fontWeight: FontWeight.bold,
+                        fontSize: 38,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
                         letterSpacing: -0.75,
                         fontFamily: 'DM Sans',

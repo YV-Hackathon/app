@@ -15,7 +15,92 @@ class PlaylistInstructionsPage extends ConsumerStatefulWidget {
 }
 
 class _PlaylistInstructionsPageState
-    extends ConsumerState<PlaylistInstructionsPage> {
+    extends ConsumerState<PlaylistInstructionsPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _centerCardAnimation;
+  late Animation<double> _leftCardAnimation;
+  late Animation<double> _rightCardAnimation;
+  late Animation<Offset> _leftCardSlideAnimation;
+  late Animation<Offset> _rightCardSlideAnimation;
+  late Animation<double> _leftCardRotationAnimation;
+  late Animation<double> _rightCardRotationAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 2400),
+      vsync: this,
+    );
+
+    // Center card fades in first
+    _centerCardAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.3, curve: Curves.easeOut),
+      ),
+    );
+
+    // Left card animation - fades in and slides from center
+    _leftCardAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _leftCardSlideAnimation = Tween<Offset>(
+      begin: const Offset(0.5, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    _leftCardRotationAnimation = Tween<double>(begin: 0.0, end: -12.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.2, 0.6, curve: Curves.easeOut),
+      ),
+    );
+
+    // Right card animation - fades in and slides from center
+    _rightCardAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.3, 0.7, curve: Curves.easeOut),
+      ),
+    );
+
+    _rightCardSlideAnimation = Tween<Offset>(
+      begin: const Offset(-0.5, 0),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.3, 0.7, curve: Curves.easeOut),
+      ),
+    );
+
+    _rightCardRotationAnimation = Tween<double>(begin: 0.0, end: 12.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.3, 0.7, curve: Curves.easeOut),
+      ),
+    );
+
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final playlistInstructionsState = ref.watch(
@@ -100,43 +185,76 @@ class _PlaylistInstructionsPageState
         height: 225,
         child: Stack(
           children: [
-            // Left video (behind, smaller, rotated left)
+            // Left video (behind, smaller, rotated left) - slides in from center
             Positioned(
               top: 25,
               left: 20,
-              child: _buildVideoClip(
-                width: 100,
-                height: 180,
-                rotation: -12,
-                isMain: false,
-                showSkipButton: playlistInstructions.showSkipButton,
-                imagePath: null,
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return SlideTransition(
+                    position: _leftCardSlideAnimation,
+                    child: FadeTransition(
+                      opacity: _leftCardAnimation,
+                      child: Transform.rotate(
+                        angle:
+                            _leftCardRotationAnimation.value * (3.14159 / 180),
+                        child: _buildVideoClip(
+                          width: 100,
+                          height: 180,
+                          rotation: 0, // Rotation handled by animation
+                          isMain: false,
+                          showSkipButton: playlistInstructions.showSkipButton,
+                          imagePath: null,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            // Right video (behind, smaller, rotated right)
+            // Right video (behind, smaller, rotated right) - slides in from center
             Positioned(
               top: 25,
               right: 20,
-              child: _buildVideoClip(
-                width: 100,
-                height: 180,
-                rotation: 12,
-                isMain: false,
-                showSkipButton: false,
-                imagePath: null,
+              child: AnimatedBuilder(
+                animation: _animationController,
+                builder: (context, child) {
+                  return SlideTransition(
+                    position: _rightCardSlideAnimation,
+                    child: FadeTransition(
+                      opacity: _rightCardAnimation,
+                      child: Transform.rotate(
+                        angle:
+                            _rightCardRotationAnimation.value * (3.14159 / 180),
+                        child: _buildVideoClip(
+                          width: 100,
+                          height: 180,
+                          rotation: 0, // Rotation handled by animation
+                          isMain: false,
+                          showSkipButton: false,
+                          imagePath: null,
+                        ),
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
-            // Main center video (on top, larger, no rotation)
+            // Main center video (on top, larger, no rotation) - fades in first
             Positioned(
               top: 0,
               left: 87, // Centered with slight overlap
-              child: _buildVideoClip(
-                width: 127,
-                height: 225,
-                rotation: 0,
-                isMain: true,
-                showSkipButton: false,
-                imagePath: 'assets/images/swipping_video_image_1.png',
+              child: FadeTransition(
+                opacity: _centerCardAnimation,
+                child: _buildVideoClip(
+                  width: 127,
+                  height: 225,
+                  rotation: 0,
+                  isMain: true,
+                  showSkipButton: false,
+                  imagePath: 'assets/images/swipping_video_image_1.png',
+                ),
               ),
             ),
           ],

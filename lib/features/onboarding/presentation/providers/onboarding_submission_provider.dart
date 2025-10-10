@@ -82,18 +82,20 @@ class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
       print('👥 Selected Speaker IDs: $selectedSpeakerIds');
 
       // Get question IDs from actual questions (by index)
-      // Index 0: speakers, 1: bible reading, 2: teaching style, 3: environment
-      if (questionState.questions.length < 4) {
+      // Index 0: bible reading, 1: teaching style, 2: gender, 3: environment, 4: speakers
+      if (questionState.questions.length < 5) {
         throw Exception('Not all questions are loaded');
       }
 
-      final bibleReadingQuestionId = questionState.questions[1].id;
-      final teachingStyleQuestionId = questionState.questions[2].id;
+      final bibleReadingQuestionId = questionState.questions[0].id;
+      final teachingStyleQuestionId = questionState.questions[1].id;
+      final genderQuestionId = questionState.questions[2].id;
       final environmentQuestionId = questionState.questions[3].id;
 
       print('📋 Question IDs:');
       print('  Bible: $bibleReadingQuestionId');
       print('  Teaching: $teachingStyleQuestionId');
+      print('  Gender: $genderQuestionId');
       print('  Environment: $environmentQuestionId');
 
       // Get answers from questionState using actual question IDs
@@ -101,11 +103,13 @@ class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
           questionState.selectedAnswers[bibleReadingQuestionId];
       final teachingStyleAnswer =
           questionState.selectedAnswers[teachingStyleQuestionId];
+      final genderAnswer = questionState.selectedAnswers[genderQuestionId];
       final environmentAnswer =
           questionState.selectedAnswers[environmentQuestionId];
 
       print('📖 Bible Reading Answer: $bibleReadingAnswer');
       print('🎤 Teaching Style Answer: $teachingStyleAnswer');
+      print('👤 Gender Answer: $genderAnswer');
       print('⛪ Environment Answer: $environmentAnswer');
 
       // Map to enums
@@ -117,6 +121,10 @@ class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
           teachingStyleAnswer != null
               ? TeachingStylePreference.fromOptionValue(teachingStyleAnswer)
               : null;
+      final genderPref =
+          genderAnswer != null
+              ? GenderPreference.fromOptionValue(genderAnswer)
+              : null;
       final environmentPref =
           environmentAnswer != null
               ? EnvironmentPreference.fromOptionValue(environmentAnswer)
@@ -127,15 +135,18 @@ class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
       print(
         '  Teaching: "$teachingStyleAnswer" -> ${teachingStylePref?.value}',
       );
+      print('  Gender: "$genderAnswer" -> ${genderPref?.value}');
       print('  Environment: "$environmentAnswer" -> ${environmentPref?.value}');
 
       // Validate all required fields are present
       if (bibleReadingPref == null ||
           teachingStylePref == null ||
+          genderPref == null ||
           environmentPref == null) {
         print('❌ Validation Failed:');
         print('  bibleReadingPref is null: ${bibleReadingPref == null}');
         print('  teachingStylePref is null: ${teachingStylePref == null}');
+        print('  genderPref is null: ${genderPref == null}');
         print('  environmentPref is null: ${environmentPref == null}');
         throw Exception('Missing required onboarding answers');
       }
@@ -147,31 +158,50 @@ class OnboardingSubmissionNotifier extends _$OnboardingSubmissionNotifier {
           speakers: selectedSpeakerIds,
           bibleReadingPreference: bibleReadingPref.value,
           teachingStylePreference: teachingStylePref.value,
+          genderPreference: genderPref.value,
           environmentPreference: environmentPref.value,
         ),
       );
 
-      print('📤 Submitting request to API...');
+      print('📤 ==================== SUBMITTING REQUEST ====================');
+      print('📤 Request JSON:');
+      print(request.toJson());
+      print('📤 Full Request Details:');
+      print('   User ID: 6');
+      print(
+        '   Speakers: $selectedSpeakerIds (${selectedSpeakerIds.length} selected)',
+      );
+      print('   Bible Reading: ${bibleReadingPref.value}');
+      print('   Teaching Style: ${teachingStylePref.value}');
+      print('   Gender Preference: ${genderPref.value}');
+      print('   Environment: ${environmentPref.value}');
+      print('📤 ============================================================');
 
       // Submit
       final useCase = ref.read(submitOnboardingUseCaseProvider);
       final response = await useCase(request);
 
-      print('✅ Submission successful!');
-      print('📦 Response: $response');
+      print('✅ ==================== RESPONSE RECEIVED ====================');
+      print('📦 Full Response: $response');
       print(
         '🎬 Recommended Sermons Count: ${response.recommendedSermons?.length ?? 0}',
       );
 
-      if (response.recommendedSermons != null &&
-          response.recommendedSermons!.isNotEmpty) {
-        print('🎥 First sermon: ${response.recommendedSermons!.first.title}');
-        print(
-          '👤 Speaker: ${response.recommendedSermons!.first.speaker?.name ?? "Unknown"}',
-        );
+      if (response.recommendedSermons != null) {
+        print('📺 All Recommended Sermons:');
+        for (var i = 0; i < response.recommendedSermons!.length; i++) {
+          final sermon = response.recommendedSermons![i];
+          print('   [$i] ${sermon.title}');
+          print('       Speaker: ${sermon.speaker?.name ?? "Unknown"}');
+          print('       ID: ${sermon.id}');
+          print('       GCS URL: ${sermon.gcsUrl}');
+          print('       Description: ${sermon.description}');
+          print('       Is Clip: ${sermon.isClip ?? false}');
+        }
       } else {
-        print('⚠️ WARNING: No recommended sermons in response!');
+        print('⚠️ WARNING: recommendedSermons is NULL in response!');
       }
+      print('✅ ============================================================');
 
       state = state.copyWith(
         status: SubmissionStatus.success,
@@ -200,10 +230,29 @@ List<RecommendedSermon> recommendedSermons(Ref ref) {
   final submissionState = ref.watch(onboardingSubmissionNotifierProvider);
   final sermons = submissionState.response?.recommendedSermons ?? [];
 
-  print('🔍 recommendedSermonsProvider called');
+  print(
+    '🔍 ==================== RECOMMENDED SERMONS PROVIDER ====================',
+  );
   print('   State status: ${submissionState.status}');
   print('   Response exists: ${submissionState.response != null}');
-  print('   Sermons count: ${sermons.length}');
+  if (submissionState.response != null) {
+    print(
+      '   Response.recommendedSermons exists: ${submissionState.response!.recommendedSermons != null}',
+    );
+    if (submissionState.response!.recommendedSermons != null) {
+      print(
+        '   Response.recommendedSermons length: ${submissionState.response!.recommendedSermons!.length}',
+      );
+      print(
+        '   Response.recommendedSermons raw data: ${submissionState.response!.recommendedSermons}',
+      );
+    }
+  }
+  print('   Final sermons count to return: ${sermons.length}');
+  if (sermons.isEmpty) {
+    print('   ⚠️ Returning EMPTY list!');
+  }
+  print('🔍 ================================================================');
 
   return sermons;
 }

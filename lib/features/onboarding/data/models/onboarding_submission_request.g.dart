@@ -29,6 +29,7 @@ _$OnboardingAnswersImpl _$$OnboardingAnswersImplFromJson(
           .toList(),
       bibleReadingPreference: json['bible_reading_preference'] as String,
       teachingStylePreference: json['teaching_style_preference'] as String,
+      genderPreference: json['gender_preference'] as String,
       environmentPreference: json['environment_preference'] as String,
     );
 
@@ -38,5 +39,6 @@ Map<String, dynamic> _$$OnboardingAnswersImplToJson(
       'speakers': instance.speakers,
       'bible_reading_preference': instance.bibleReadingPreference,
       'teaching_style_preference': instance.teachingStylePreference,
+      'gender_preference': instance.genderPreference,
       'environment_preference': instance.environmentPreference,
     };

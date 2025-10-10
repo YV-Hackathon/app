@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:gloo_hackathon/features/splash/presentation/pages/simple_splash_page.dart';
 import 'package:go_router/go_router.dart';
 import '../../features/churches/domain/entities/church.dart';
@@ -16,6 +17,8 @@ import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/onboarding/presentation/pages/unified_onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/loading_screen_page.dart';
 import '../../features/onboarding/presentation/pages/sermon_clips_page.dart';
+import '../../features/onboarding/presentation/pages/onboarding_success_page.dart';
+import '../../shared/widgets/onboarding_background.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/splash',
@@ -85,6 +88,15 @@ final appRouter = GoRouter(
       path: '/sermon-clips',
       name: 'sermon-clips',
       builder: (context, state) => const SermonClipsPage(),
+    ),
+    GoRoute(
+      path: '/onboarding-success',
+      name: 'onboarding-success',
+      builder:
+          (context, state) => const Scaffold(
+            backgroundColor: Color(0xFF121212),
+            body: OnboardingBackground(child: OnboardingSuccessPage()),
+          ),
     ),
 
     GoRoute(
