@@ -1,27 +1,93 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_fonts.dart';
-import '../../domain/entities/church.dart';
+import '../../domain/entities/church_detail.dart';
 import '../../domain/entities/pastor.dart';
 import '../../domain/entities/sermon.dart';
 import '../widgets/pastor_card.dart';
 import '../widgets/sermon_card.dart';
+import '../providers/church_detail_provider.dart';
 
-class ChurchProfilePage extends StatefulWidget {
-  final Church church;
+class ChurchProfilePage extends ConsumerStatefulWidget {
+  final int churchId;
 
-  const ChurchProfilePage({super.key, required this.church});
+  const ChurchProfilePage({super.key, required this.churchId});
 
   @override
-  State<ChurchProfilePage> createState() => _ChurchProfilePageState();
+  ConsumerState<ChurchProfilePage> createState() => _ChurchProfilePageState();
 }
 
-class _ChurchProfilePageState extends State<ChurchProfilePage> {
+class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
   bool _isFollowing = false;
 
   @override
   Widget build(BuildContext context) {
+    final churchDetailAsync = ref.watch(
+      churchDetailNotifierProvider(widget.churchId),
+    );
+
+    return churchDetailAsync.when(
+      data: (churchDetail) {
+        if (churchDetail == null) {
+          return _buildErrorState('Church not found');
+        }
+        return _buildChurchProfile(churchDetail);
+      },
+      loading: () => _buildLoadingState(),
+      error:
+          (error, stackTrace) =>
+              _buildErrorState('Failed to load church details: $error'),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Scaffold(
+      backgroundColor: AppColors.tabBarBackground,
+      body: const Center(
+        child: CircularProgressIndicator(color: AppColors.white),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Scaffold(
+      backgroundColor: AppColors.tabBarBackground,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, color: AppColors.white, size: 64),
+            const SizedBox(height: 16),
+            Text(
+              'Error',
+              style: const TextStyle(
+                color: AppColors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              message,
+              style: const TextStyle(color: Color(0xFFBFBDBD), fontSize: 14),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () {
+                ref.invalidate(churchDetailNotifierProvider(widget.churchId));
+              },
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChurchProfile(ChurchDetail churchDetail) {
     return Scaffold(
       backgroundColor: AppColors.tabBarBackground,
       body: CustomScrollView(
@@ -49,7 +115,14 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
               background: Container(
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: AssetImage(widget.church.imageUrl),
+                    image:
+                        churchDetail.imageUrl != null &&
+                                churchDetail.imageUrl!.isNotEmpty
+                            ? NetworkImage(churchDetail.imageUrl!)
+                            : const AssetImage(
+                                  'assets/images/church_avatars/church_avatar_1.png',
+                                )
+                                as ImageProvider,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -63,7 +136,7 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Church info section with padding
-                _buildChurchInfo(),
+                _buildChurchInfo(churchDetail),
                 const SizedBox(height: 32),
 
                 // Pastors section with padding
@@ -84,7 +157,7 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
     );
   }
 
-  Widget _buildChurchInfo() {
+  Widget _buildChurchInfo(ChurchDetail churchDetail) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -99,7 +172,14 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(40),
                   image: DecorationImage(
-                    image: AssetImage(widget.church.imageUrl),
+                    image:
+                        churchDetail.imageUrl != null &&
+                                churchDetail.imageUrl!.isNotEmpty
+                            ? NetworkImage(churchDetail.imageUrl!)
+                            : const AssetImage(
+                                  'assets/images/church_avatars/church_avatar_1.png',
+                                )
+                                as ImageProvider,
                     fit: BoxFit.cover,
                   ),
                 ),
@@ -110,7 +190,7 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.church.name,
+                      churchDetail.name,
                       style: const TextStyle(
                         fontSize: 25,
                         fontWeight: FontWeight.bold,
@@ -120,13 +200,24 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '8,000 Average Weekly Attendance',
+                      churchDetail.denomination,
                       style: const TextStyle(
                         fontSize: 11,
                         color: Color(0xFFBFBDBD),
                         fontFamily: 'Aktiv Grotesk App',
                       ),
                     ),
+                    if (churchDetail.membershipCount != null) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        '${churchDetail.membershipCount} members',
+                        style: const TextStyle(
+                          fontSize: 11,
+                          color: Color(0xFFBFBDBD),
+                          fontFamily: 'Aktiv Grotesk App',
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -135,7 +226,7 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
         ),
         const SizedBox(height: 16),
 
-        // Church attributes
+        // Church attributes (using denomination and founded year as attributes)
         SizedBox(
           height: 36, // Fixed height to prevent layout shifts
           child: SingleChildScrollView(
@@ -143,31 +234,78 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(
-                children:
-                    widget.church.attributes.map((attribute) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: const Color(0xFF474545)),
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Text(
-                            attribute,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.white,
-                              fontFamily: 'Aktiv Grotesk App',
-                            ),
+                children: [
+                  // Denomination as an attribute
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF474545)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        churchDetail.denomination,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                          fontFamily: 'Aktiv Grotesk App',
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Founded year as an attribute
+                  if (churchDetail.foundedYear != null)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: const Color(0xFF474545)),
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Text(
+                          'Founded ${churchDetail.foundedYear}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: AppColors.white,
+                            fontFamily: 'Aktiv Grotesk App',
                           ),
                         ),
-                      );
-                    }).toList(),
+                      ),
+                    ),
+                  // Active status as an attribute
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xFF474545)),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        churchDetail.isActive ? 'Active' : 'Inactive',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.white,
+                          fontFamily: 'Aktiv Grotesk App',
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -175,18 +313,20 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
         const SizedBox(height: 16),
 
         // Church description
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Text(
-            widget.church.description,
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.white,
-              fontFamily: 'Aktiv Grotesk App',
-              height: 1.5,
+        if (churchDetail.description != null &&
+            churchDetail.description!.isNotEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Text(
+              churchDetail.description!,
+              style: const TextStyle(
+                fontSize: 13,
+                color: AppColors.white,
+                fontFamily: 'Aktiv Grotesk App',
+                height: 1.5,
+              ),
             ),
           ),
-        ),
         const SizedBox(height: 16),
 
         // Action buttons
@@ -283,49 +423,76 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on,
-                    size: 16,
-                    color: AppColors.white,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      '13248 Roscoe Blvd Sun Valley, CA 91352',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppColors.white,
-                        fontFamily: 'Aktiv Grotesk App',
+              // Address
+              if (churchDetail.address != null &&
+                  churchDetail.address!.fullAddress.isNotEmpty)
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.location_on,
+                      size: 16,
+                      color: AppColors.white,
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        churchDetail.address!.fullAddress,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: AppColors.white,
+                          fontFamily: 'Aktiv Grotesk App',
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
+                  ],
+                ),
+              if (churchDetail.address != null &&
+                  churchDetail.address!.fullAddress.isNotEmpty)
+                const SizedBox(height: 16),
+
+              // Contact buttons
               Row(
                 children: [
-                  Expanded(
-                    child: _buildContactButton(
-                      icon: Icons.language,
-                      label: 'Website',
+                  if (churchDetail.website != null &&
+                      churchDetail.website!.isNotEmpty)
+                    Expanded(
+                      child: _buildContactButton(
+                        icon: Icons.language,
+                        label: 'Website',
+                        onTap: () {
+                          // TODO: Open website URL
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildContactButton(
-                      icon: Icons.calendar_today,
-                      label: 'Services',
+                  if (churchDetail.website != null &&
+                      churchDetail.website!.isNotEmpty)
+                    const SizedBox(width: 16),
+
+                  if (churchDetail.serviceTimes != null &&
+                      churchDetail.serviceTimes!.allServiceTimes.isNotEmpty)
+                    Expanded(
+                      child: _buildContactButton(
+                        icon: Icons.calendar_today,
+                        label: 'Services',
+                        onTap: () {
+                          // TODO: Show service times
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: _buildContactButton(
-                      icon: Icons.email,
-                      label: 'Contact',
+                  if (churchDetail.serviceTimes != null &&
+                      churchDetail.serviceTimes!.allServiceTimes.isNotEmpty)
+                    const SizedBox(width: 16),
+
+                  if (churchDetail.phone != null || churchDetail.email != null)
+                    Expanded(
+                      child: _buildContactButton(
+                        icon: Icons.email,
+                        label: 'Contact',
+                        onTap: () {
+                          // TODO: Show contact options
+                        },
+                      ),
                     ),
-                  ),
                 ],
               ),
             ],
@@ -335,28 +502,35 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
     );
   }
 
-  Widget _buildContactButton({required IconData icon, required String label}) {
-    return Container(
-      height: 66,
-      decoration: BoxDecoration(
-        color: const Color(0xFF232121),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, size: 24, color: AppColors.white),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: AppColors.white,
-              fontFamily: 'Aktiv Grotesk App',
+  Widget _buildContactButton({
+    required IconData icon,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: 66,
+        decoration: BoxDecoration(
+          color: const Color(0xFF232121),
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 24, color: AppColors.white),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: AppColors.white,
+                fontFamily: 'Aktiv Grotesk App',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -445,7 +619,7 @@ class _ChurchProfilePageState extends State<ChurchProfilePage> {
               ),
               GestureDetector(
                 onTap: () {
-                  context.push('/church/${widget.church.id}/sermons/see-all');
+                  context.push('/church/${widget.churchId}/sermons/see-all');
                 },
                 child: const Row(
                   mainAxisSize: MainAxisSize.min,

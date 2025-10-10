@@ -101,7 +101,7 @@ class ChurchListItem extends StatelessWidget {
                           ),
                           const SizedBox(width: 2),
                           Text(
-                            church.distanceText,
+                            '21.8 miles',
                             style: const TextStyle(
                               fontSize: AppFonts.xs,
                               fontWeight: FontWeight.w500,
@@ -124,7 +124,7 @@ class ChurchListItem extends StatelessWidget {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(86),
                     image: DecorationImage(
-                      image: AssetImage(church.imageUrl),
+                      image: NetworkImage(church.imageUrl),
                       fit: BoxFit.cover,
                     ),
                   ),
