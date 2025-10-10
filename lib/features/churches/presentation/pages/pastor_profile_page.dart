@@ -444,7 +444,7 @@ class _PastorProfilePageState extends State<PastorProfilePage> {
         const SizedBox(height: 16),
         // Carousel without horizontal padding
         SizedBox(
-          height: 200,
+          height: 250,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.only(left: 24.0, right: 24.0),

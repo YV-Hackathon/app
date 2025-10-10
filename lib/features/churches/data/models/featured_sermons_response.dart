@@ -41,6 +41,7 @@ class FeaturedSermonChurch with _$FeaturedSermonChurch {
     @JsonKey(name: 'service_times') ServiceTimesModel? serviceTimes,
     @JsonKey(name: 'social_media') SocialMediaModel? socialMedia,
     @JsonKey(name: 'image_url') String? imageUrl,
+    @Default([]) List<String> attributes,
     @JsonKey(name: 'is_active') required bool isActive,
     @JsonKey(name: 'sort_order') required int sortOrder,
     required int id,
@@ -62,7 +63,7 @@ class FeaturedSermonData with _$FeaturedSermonData {
     required int id,
     @JsonKey(name: 'speaker_id') required int speakerId,
     @JsonKey(name: 'created_at') required String createdAt,
-    @JsonKey(name: 'updated_at') required String updatedAt,
+    @JsonKey(name: 'updated_at') String? updatedAt,
     required FeaturedSermonSpeaker speaker,
   }) = _FeaturedSermonData;
 

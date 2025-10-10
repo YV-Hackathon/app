@@ -632,7 +632,7 @@ class _ChurchProfilePageState extends ConsumerState<ChurchProfilePage> {
             }
 
             return SizedBox(
-              height: 240, // Increased height to accommodate additional content
+              height: 300, // Increased height to accommodate additional content
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.only(left: 24.0, right: 24.0),

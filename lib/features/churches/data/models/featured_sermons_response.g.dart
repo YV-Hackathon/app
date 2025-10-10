@@ -59,6 +59,10 @@ _$FeaturedSermonChurchImpl _$$FeaturedSermonChurchImplFromJson(
           : SocialMediaModel.fromJson(
               json['social_media'] as Map<String, dynamic>),
       imageUrl: json['image_url'] as String?,
+      attributes: (json['attributes'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
       isActive: json['is_active'] as bool,
       sortOrder: (json['sort_order'] as num).toInt(),
       id: (json['id'] as num).toInt(),
@@ -81,6 +85,7 @@ Map<String, dynamic> _$$FeaturedSermonChurchImplToJson(
       'service_times': instance.serviceTimes,
       'social_media': instance.socialMedia,
       'image_url': instance.imageUrl,
+      'attributes': instance.attributes,
       'is_active': instance.isActive,
       'sort_order': instance.sortOrder,
       'id': instance.id,
@@ -98,7 +103,7 @@ _$FeaturedSermonDataImpl _$$FeaturedSermonDataImplFromJson(
       id: (json['id'] as num).toInt(),
       speakerId: (json['speaker_id'] as num).toInt(),
       createdAt: json['created_at'] as String,
-      updatedAt: json['updated_at'] as String,
+      updatedAt: json['updated_at'] as String?,
       speaker: FeaturedSermonSpeaker.fromJson(
           json['speaker'] as Map<String, dynamic>),
     );
