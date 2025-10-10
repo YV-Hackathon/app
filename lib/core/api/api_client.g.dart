@@ -80,39 +80,10 @@ class _ApiClient implements ApiClient {
           baseUrl,
         )));
     final _result = await _dio.fetch<Map<String, dynamic>>(_options);
-
-    // Debug: Print raw response data
-    print('🔍 RAW SUBMISSION RESPONSE: ${_result.data}');
-    print('🔍 Response status: ${_result.statusCode}');
-    print('🔍 Response data type: ${_result.data.runtimeType}');
-    if (_result.data != null &&
-        _result.data!.containsKey('recommended_sermons')) {
-      print(
-        '🎬 recommended_sermons field exists: ${_result.data!['recommended_sermons']}',
-      );
-      print(
-        '🎬 recommended_sermons type: ${_result.data!['recommended_sermons'].runtimeType}',
-      );
-      if (_result.data!['recommended_sermons'] is List) {
-        print(
-          '🎬 recommended_sermons length: ${(_result.data!['recommended_sermons'] as List).length}',
-        );
-      }
-    } else {
-      print('⚠️ WARNING: recommended_sermons field NOT found in response!');
-      print('Available keys: ${_result.data?.keys.toList()}');
-    }
-
     late OnboardingSubmissionResponse _value;
     try {
       _value = OnboardingSubmissionResponse.fromJson(_result.data!);
-      print('✅ Parsed OnboardingSubmissionResponse successfully');
-      print(
-        '🎬 Parsed recommendedSermons count: ${_value.recommendedSermons?.length ?? 0}',
-      );
     } on Object catch (e, s) {
-      print('❌ ERROR parsing OnboardingSubmissionResponse: $e');
-      print('❌ Stack trace: $s');
       errorLogger?.logError(e, s, _options);
       rethrow;
     }

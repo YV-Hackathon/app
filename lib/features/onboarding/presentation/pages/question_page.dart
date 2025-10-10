@@ -15,7 +15,26 @@ class QuestionPage extends ConsumerStatefulWidget {
   ConsumerState<QuestionPage> createState() => _QuestionPageState();
 }
 
-class _QuestionPageState extends ConsumerState<QuestionPage> {
+class _QuestionPageState extends ConsumerState<QuestionPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1600),
+      vsync: this,
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final question = ref.watch(bibleReadingQuestionProvider);
@@ -116,13 +135,13 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
       children: [
         Expanded(
           child: Row(
-            children: List.generate(4, (index) {
+            children: List.generate(5, (index) {
               return Expanded(
                 child: Container(
                   height: 4,
-                  margin: EdgeInsets.only(right: index < 3 ? 16 : 0),
+                  margin: EdgeInsets.only(right: index < 4 ? 16 : 0),
                   decoration: BoxDecoration(
-                    color: index < 2 ? Colors.white : const Color(0xFF353333),
+                    color: index < 1 ? Colors.white : const Color(0xFF353333),
                     borderRadius: BorderRadius.circular(24),
                   ),
                 ),
@@ -181,15 +200,43 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
         final option = question.options[index];
         final isSelected = selectedOptionId == option.id;
 
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: _buildOptionCard(
-            option: option,
-            isSelected: isSelected,
-            onTap:
-                () => ref
-                    .read(questionNotifierProvider.notifier)
-                    .selectAnswer(question.id, option.id),
+        // Staggered animation for each option
+        final delay = index * 0.1;
+        final start = delay;
+        final end = start + 0.4;
+
+        final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(start, end, curve: Curves.easeOut),
+          ),
+        );
+
+        final slideAnimation = Tween<Offset>(
+          begin: const Offset(0, 0.3),
+          end: Offset.zero,
+        ).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Interval(start, end, curve: Curves.easeOut),
+          ),
+        );
+
+        return SlideTransition(
+          position: slideAnimation,
+          child: FadeTransition(
+            opacity: fadeAnimation,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: _buildOptionCard(
+                option: option,
+                isSelected: isSelected,
+                onTap:
+                    () => ref
+                        .read(questionNotifierProvider.notifier)
+                        .selectAnswer(question.id, option.id),
+              ),
+            ),
           ),
         );
       },
@@ -201,44 +248,40 @@ class _QuestionPageState extends ConsumerState<QuestionPage> {
     required bool isSelected,
     required VoidCallback onTap,
   }) {
+    print('option: ${option.title} ${option.description}');
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: const Color(0xFF232121),
+          color: Colors.transparent,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color:
+                isSelected
+                    ? const Color(0xFF3BC175)
+                    : const Color(0xBFBDBD).withOpacity(0.38),
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    option.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      height: 1.25,
-                    ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
+              child: Expanded(
+                child: Text(
+                  option.title,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                    height: 1.25,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    option.description,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.normal,
-                      color: Color(0xFFBFBDBD),
-                      height: 1.25,
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
-            const SizedBox(width: 32),
+            const Spacer(),
             _buildRadioButton(isSelected),
           ],
         ),

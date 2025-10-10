@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter_card_swiper/flutter_card_swiper.dart';
 import 'package:go_router/go_router.dart';
 import 'package:video_player/video_player.dart';
@@ -12,6 +11,8 @@ import '../providers/sermon_preference_provider.dart';
 import '../../data/models/onboarding_submission_response.dart';
 import '../../data/models/recommended_sermon_mapper.dart';
 import '../../data/models/sermon_preference_request.dart';
+import '../../../churches/domain/entities/church.dart';
+import '../../../churches/presentation/pages/church_profile_page.dart';
 
 class SermonClipsPage extends ConsumerStatefulWidget {
   final VoidCallback? onNext;
@@ -41,6 +42,10 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
   Timer? _iconTimer;
   bool _isLoadingVideo = false;
 
+  late AnimationController _pageEntranceController;
+  late Animation<double> _pageEntranceFade;
+  late Animation<Offset> _pageEntranceSlide;
+
   @override
   void initState() {
     super.initState();
@@ -54,11 +59,29 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
       begin: 0.0,
       end: 1.0,
     ).animate(_fadeController);
+
+    // Page entrance animation
+    _pageEntranceController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+
+    _pageEntranceFade = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _pageEntranceController, curve: Curves.easeOut),
+    );
+
+    _pageEntranceSlide = Tween<Offset>(
+      begin: const Offset(0, 0.03),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(parent: _pageEntranceController, curve: Curves.easeOut),
+    );
   }
 
   @override
   void dispose() {
     _fadeController.dispose();
+    _pageEntranceController.dispose();
     _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
     _iconTimer?.cancel();
@@ -211,11 +234,11 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
           print('🎯 Controller disposal error: $e');
         }
 
-        // Step 3: Navigate to home immediately after disposal
+        // Step 3: Navigate to success screen immediately after disposal
         Future.delayed(const Duration(milliseconds: 50), () {
           if (!mounted) return;
-          print('🎯 Navigating to /home');
-          context.go('/home');
+          print('🎯 Navigating to success screen');
+          context.go('/onboarding-success');
         });
       });
     });
@@ -227,22 +250,39 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
     final recommendedSermons = ref.watch(recommendedSermonsProvider);
     final submissionState = ref.watch(onboardingSubmissionNotifierProvider);
 
-    print('🎬 SermonClipsPage build');
-    print('📊 Submission status: ${submissionState.status}');
-    print('📦 Response object: ${submissionState.response}');
     print(
-      '🎬 Recommended sermons in response: ${submissionState.response?.recommendedSermons?.length ?? 0}',
+      '🎬 ==================== SERMON CLIPS PAGE BUILD ====================',
     );
+    print('📊 Submission status: ${submissionState.status}');
+    print('📦 Response object exists: ${submissionState.response != null}');
+    if (submissionState.response != null) {
+      print(
+        '📦 Response recommendedSermons exists: ${submissionState.response!.recommendedSermons != null}',
+      );
+      print(
+        '📦 Response recommendedSermons count: ${submissionState.response!.recommendedSermons?.length ?? 0}',
+      );
+    }
     print('📊 Recommended sermons from provider: ${recommendedSermons.length}');
 
     if (recommendedSermons.isNotEmpty) {
-      print('✅ Found ${recommendedSermons.length} sermons:');
-      for (var i = 0; i < recommendedSermons.length && i < 3; i++) {
-        print('  - Sermon $i: ${recommendedSermons[i].title}');
+      print('✅ Found ${recommendedSermons.length} sermons from provider:');
+      for (var i = 0; i < recommendedSermons.length; i++) {
+        final sermon = recommendedSermons[i];
+        print('  [$i] ${sermon.title}');
+        print('      ID: ${sermon.id}');
+        print('      Speaker: ${sermon.speaker?.name ?? "No speaker"}');
+        print('      GCS URL: ${sermon.gcsUrl}');
+        print('      Description: ${sermon.description}');
+        print('      Is Clip: ${sermon.isClip ?? false}');
       }
     } else {
-      print('⚠️ No sermons found in provider');
+      print('⚠️ WARNING: No sermons found in provider!');
+      print('   This means recommendedSermonsProvider returned empty list');
     }
+    print(
+      '🎬 ================================================================',
+    );
 
     return Scaffold(
       backgroundColor: const Color(0xFF121212),
@@ -304,9 +344,10 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
 
     print('🎥 Total sermon clips after conversion: ${sermonClips.length}');
     for (var i = 0; i < sermonClips.length; i++) {
-      print(
-        '  - Sermon $i: ${sermonClips[i].title} (${sermonClips[i].speaker.name})',
-      );
+      print('  - Sermon $i: ${sermonClips[i].title}');
+      print('    👤 Speaker: ${sermonClips[i].speaker.name}');
+      print('    ⛪ Church: ${sermonClips[i].churchName}');
+      print('    🖼️ Church Logo: ${sermonClips[i].churchLogo}');
     }
 
     // If no sermon clips available
@@ -360,6 +401,8 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
           });
           ref.read(sermonClipsProvider.notifier).initialize(sermonClips.length);
           _initializeVideo();
+          // Start the page entrance animation
+          _pageEntranceController.forward();
           print('✅ Local _sermonClips updated successfully');
         }
       });
@@ -390,51 +433,57 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
       );
     }
 
-    // Build the card swiper
-    return CardSwiper(
-      controller: _cardSwiperController,
-      cardsCount: _sermonClips.length,
-      onSwipe: (previousIndex, currentIndex, direction) {
-        // Early exit if already completed or not mounted
-        if (!mounted || _hasTriggeredCompletion || previousIndex == null)
-          return;
+    // Build the card swiper with entrance animation
+    return FadeTransition(
+      opacity: _pageEntranceFade,
+      child: SlideTransition(
+        position: _pageEntranceSlide,
+        child: CardSwiper(
+          controller: _cardSwiperController,
+          cardsCount: _sermonClips.length,
+          onSwipe: (previousIndex, currentIndex, direction) {
+            // Early exit if already completed or not mounted
+            if (!mounted || _hasTriggeredCompletion || previousIndex == null)
+              return;
 
-        print(
-          'Card $previousIndex swiped to the ${direction.name}. currentIndex: $currentIndex',
-        );
+            print(
+              'Card $previousIndex swiped to the ${direction.name}. currentIndex: $currentIndex',
+            );
 
-        // Submit preference based on swipe direction
-        final swipedSermon = _sermonClips[previousIndex];
-        final preference =
-            direction.name == 'right'
-                ? SermonPreference.thumbsUp
-                : SermonPreference.thumbsDown;
+            // Submit preference based on swipe direction
+            final swipedSermon = _sermonClips[previousIndex];
+            final preference =
+                direction.name == 'right'
+                    ? SermonPreference.thumbsUp
+                    : SermonPreference.thumbsDown;
 
-        // Parse sermon ID safely
-        final sermonId = int.tryParse(swipedSermon.id);
-        if (sermonId != null) {
-          ref
-              .read(sermonPreferenceNotifierProvider.notifier)
-              .submitPreference(
-                userId: 6,
-                sermonId: sermonId,
-                preference: preference,
-              );
-        }
+            // Parse sermon ID safely
+            final sermonId = int.tryParse(swipedSermon.id);
+            if (sermonId != null) {
+              ref
+                  .read(sermonPreferenceNotifierProvider.notifier)
+                  .submitPreference(
+                    userId: 6,
+                    sermonId: sermonId,
+                    preference: preference,
+                  );
+            }
 
-        // Update remaining videos count (don't go below 0)
-        ref.read(sermonClipsProvider.notifier).decrementRemainingCards();
+            // Update remaining videos count (don't go below 0)
+            ref.read(sermonClipsProvider.notifier).decrementRemainingCards();
 
-        // Load new video when swiping (only if there's a next card)
-        if (currentIndex != null && currentIndex < _sermonClips.length) {
-          _loadVideo(currentIndex);
-        }
-      },
-      onEnd: _handleComplete,
-      cardBuilder: (context, index) {
-        final sermonClip = _sermonClips[index];
-        return _buildSermonClipCard(sermonClip, index);
-      },
+            // Load new video when swiping (only if there's a next card)
+            if (currentIndex != null && currentIndex < _sermonClips.length) {
+              _loadVideo(currentIndex);
+            }
+          },
+          onEnd: _handleComplete,
+          cardBuilder: (context, index) {
+            final sermonClip = _sermonClips[index];
+            return _buildSermonClipCard(sermonClip, index);
+          },
+        ),
+      ),
     );
   }
 
@@ -507,21 +556,14 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
       child: Row(
         children: [
           // App Logo
-          Container(
-            width: 42,
-            height: 42,
-            child: Image.asset('assets/images/app_logo.png'),
-          ),
-
-          const SizedBox(width: 12),
 
           // App Name
           const Text(
             'PewPal',
             style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+              color: Color(0xFF3BC076),
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
             ),
           ),
 
@@ -713,72 +755,159 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
   }
 
   Widget _buildSpeakerInfo(SermonClip sermonClip) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8),
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF232121),
-        borderRadius: BorderRadius.circular(124),
-      ),
-      child: Row(
-        children: [
-          // Speaker Avatar
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Colors.black.withOpacity(0.1),
-                width: 0.5,
+    return GestureDetector(
+      onTap: () => _navigateToPastorProfile(sermonClip),
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF232121),
+          borderRadius: BorderRadius.circular(124),
+        ),
+        child: Row(
+          children: [
+            // Church Profile Image
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFF217B48),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child:
+                    sermonClip.churchLogo.isNotEmpty
+                        ? Image.network(
+                          sermonClip.churchLogo,
+                          fit: BoxFit.cover,
+                          errorBuilder:
+                              (context, error, stackTrace) => const Icon(
+                                Icons.church,
+                                color: Colors.white,
+                                size: 24,
+                              ),
+                        )
+                        : const Icon(
+                          Icons.church,
+                          color: Colors.white,
+                          size: 24,
+                        ),
               ),
             ),
-            child: ClipOval(
-              child: CachedNetworkImage(
-                imageUrl: sermonClip.speaker.imageUrl,
-                fit: BoxFit.cover,
-                placeholder:
-                    (context, url) => const CircularProgressIndicator(),
-                errorWidget:
-                    (context, url, error) =>
-                        const Icon(Icons.person, color: Colors.white),
+
+            const SizedBox(width: 12),
+
+            // Church and Speaker Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    sermonClip.churchName,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    sermonClip.speaker.name,
+                    style: const TextStyle(
+                      color: Color(0xFFBFBDBD),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
               ),
             ),
-          ),
 
-          const SizedBox(width: 12),
-
-          // Speaker Details
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  sermonClip.speaker.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  sermonClip.churchName,
-                  style: const TextStyle(
-                    color: Color(0xFFBFBDBD),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Chevron
-          const Icon(Icons.chevron_right, color: Colors.white, size: 24),
-        ],
+            // Chevron
+            const Icon(Icons.chevron_right, color: Colors.white, size: 24),
+          ],
+        ),
       ),
     );
+  }
+
+  void _navigateToPastorProfile(SermonClip sermonClip) {
+    print('🏛️ Navigating to church profile for: ${sermonClip.churchName}');
+
+    // Pause the video before navigating
+    if (_videoController != null && _videoController!.value.isPlaying) {
+      _videoController!.pause();
+      setState(() {
+        _showPlayPauseIcon =
+            true; // Show the play icon since video is now paused
+      });
+    }
+
+    // Get the current sermon's recommended data
+    final recommendedSermons = ref.read(recommendedSermonsProvider);
+    print('📊 Total recommended sermons: ${recommendedSermons.length}');
+
+    // Find the matching recommended sermon to get full church details
+    final currentSermon = recommendedSermons.firstWhere(
+      (sermon) => sermon.id.toString() == sermonClip.id,
+      orElse: () => recommendedSermons.first,
+    );
+
+    print('🎯 Found sermon: ${currentSermon.title}');
+    print('👤 Speaker: ${currentSermon.speaker?.name}');
+    print('⛪ Church: ${currentSermon.speaker?.church?.name}');
+
+    if (currentSermon.speaker?.church == null) {
+      print('⚠️ No church data available for this sermon');
+      return;
+    }
+
+    final churchData = currentSermon.speaker!.church!;
+
+    // Create Church object from church data
+    final church = Church(
+      id: churchData.id.toString(),
+      name: churchData.name,
+      description: churchData.description ?? 'No description available',
+      imageUrl: churchData.imageUrl ?? '',
+      distance: -1, // Online - we don't have distance data
+      rating: 0, // We don't have rating data from API
+      attributes: _buildChurchAttributes(currentSermon.speaker!),
+      isOnline: true,
+    );
+
+    print('✅ Navigating to church: ${church.name} (ID: ${church.id})');
+
+    // Navigate to church profile page
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => ChurchProfilePage(church: church),
+      ),
+    );
+  }
+
+  List<String> _buildChurchAttributes(RecommendedSpeaker speaker) {
+    final attributes = <String>[];
+
+    if (speaker.teachingStyle != null) {
+      attributes.add(_formatEnumValue(speaker.teachingStyle!));
+    }
+    if (speaker.bibleApproach != null) {
+      attributes.add(_formatEnumValue(speaker.bibleApproach!));
+    }
+    if (speaker.environmentStyle != null) {
+      attributes.add(_formatEnumValue(speaker.environmentStyle!));
+    }
+
+    return attributes;
+  }
+
+  String _formatEnumValue(String value) {
+    return value
+        .split('_')
+        .map((word) => word[0].toUpperCase() + word.substring(1).toLowerCase())
+        .join(' ');
   }
 
   Widget _buildMatchingPreferences(SermonClip sermonClip) {
@@ -804,6 +933,7 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
             child: Wrap(
               alignment: WrapAlignment.start,
               spacing: 8,
+              runSpacing: 8,
               children:
                   sermonClip.attributes.map((attribute) {
                     return Container(
@@ -987,10 +1117,10 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: const Color(0xFF353333),
+              color: const Color(0xFFEDEBEB),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.thumb_down, color: Colors.white, size: 24),
+            child: const Icon(Icons.close, color: Colors.black, size: 24),
           ),
         ),
 
@@ -1023,7 +1153,11 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
               color: Color(0xFFF04C59),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.favorite, color: Colors.white, size: 24),
+            child: const Icon(
+              Icons.favorite_border_outlined,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
         ),
       ],

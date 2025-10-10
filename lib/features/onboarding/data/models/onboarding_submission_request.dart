@@ -22,6 +22,7 @@ class OnboardingAnswers with _$OnboardingAnswers {
     required String bibleReadingPreference,
     @JsonKey(name: 'teaching_style_preference')
     required String teachingStylePreference,
+    @JsonKey(name: 'gender_preference') required String genderPreference,
     @JsonKey(name: 'environment_preference')
     required String environmentPreference,
   }) = _OnboardingAnswers;

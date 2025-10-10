@@ -9,11 +9,67 @@ class WelcomeOnboardingPage extends StatefulWidget {
   State<WelcomeOnboardingPage> createState() => _WelcomeOnboardingPageState();
 }
 
-class _WelcomeOnboardingPageState extends State<WelcomeOnboardingPage> {
+class _WelcomeOnboardingPageState extends State<WelcomeOnboardingPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _firstTextAnimation;
+  late Animation<double> _secondTextAnimation;
+  late Animation<Offset> _firstTextSlideAnimation;
+  late Animation<Offset> _secondTextSlideAnimation;
+
   @override
   void initState() {
     super.initState();
-    // Navigation will be handled by the PageView in UnifiedOnboardingPage
+
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 1600),
+      vsync: this,
+    );
+
+    // First text animation
+    _firstTextAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
+      ),
+    );
+
+    _firstTextSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.6),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.0, 0.35, curve: Curves.easeOut),
+      ),
+    );
+
+    // Second text animation
+    _secondTextAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.15, 0.55, curve: Curves.easeOut),
+      ),
+    );
+
+    _secondTextSlideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.6),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: const Interval(0.15, 0.55, curve: Curves.easeOut),
+      ),
+    );
+
+    // Start animation
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   @override
@@ -28,34 +84,46 @@ class _WelcomeOnboardingPageState extends State<WelcomeOnboardingPage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // "Hi, I'm [Product Name]" in green
-                  const Text(
-                    'Hi, I\'m PewPal',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Color(0xFF3BC175), // Green color from Figma
-                      letterSpacing: -0.75,
-                      fontFamily: 'DM Sans',
-                      height: 1.0,
+                  // "Hi, I'm [Product Name]" in green with animation
+                  SlideTransition(
+                    position: _firstTextSlideAnimation,
+                    child: FadeTransition(
+                      opacity: _firstTextAnimation,
+                      child: const Text(
+                        'Hi, I\'m PewPal',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF3BC175), // Green color from Figma
+                          letterSpacing: -0.75,
+                          fontFamily: 'DM Sans',
+                          height: 1.0,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
 
                   const SizedBox(height: 24),
 
-                  // "Together, we'll find a church family..." in white
-                  const Text(
-                    'Together, we\'ll find a church family where you can grow and belong',
-                    style: TextStyle(
-                      fontSize: 25,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: -0.75,
-                      fontFamily: 'DM Sans',
-                      height: 1.0,
+                  // "Together, we'll find a church family..." in white with animation
+                  SlideTransition(
+                    position: _secondTextSlideAnimation,
+                    child: FadeTransition(
+                      opacity: _secondTextAnimation,
+                      child: const Text(
+                        'Together, we\'ll find a church family where you can grow and belong',
+                        style: TextStyle(
+                          fontSize: 25,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: -0.75,
+                          fontFamily: 'DM Sans',
+                          height: 1.0,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
-                    textAlign: TextAlign.center,
                   ),
                 ],
               ),

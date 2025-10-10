@@ -14,18 +14,14 @@ enum BibleReadingPreference {
     );
   }
 
-  /// Map from option label/value to enum
+  /// Map from option label/value to enum (from API response)
   static BibleReadingPreference? fromOptionValue(String optionValue) {
-    final normalized = optionValue.toUpperCase().replaceAll(' ', '_');
-    switch (normalized) {
-      case 'MORE_SCRIPTURE':
-      case 'MORE SCRIPTURE':
-        return BibleReadingPreference.moreScripture;
-      case 'MORE_APPLICATION':
-      case 'LIFE_APPLICATION':
-      case 'LIFE APPLICATION':
+    switch (optionValue) {
+      case 'Life Application':
         return BibleReadingPreference.moreApplication;
-      case 'BALANCED':
+      case 'More Scripture':
+        return BibleReadingPreference.moreScripture;
+      case 'Balanced':
         return BibleReadingPreference.balanced;
       default:
         return null;
@@ -49,34 +45,15 @@ enum TeachingStylePreference {
     );
   }
 
-  /// Map from option label/value to enum
+  /// Map from option label/value to enum (from API response)
   static TeachingStylePreference? fromOptionValue(String optionValue) {
-    final normalized = optionValue.toUpperCase().replaceAll(' ', '_');
-    switch (normalized) {
-      // Backend enum values
-      case 'WARM_AND_CONVERSATIONAL':
-      case 'WARM':
-      case 'CONVERSATIONAL':
-      // API option labels
-      case 'RELATABLE':
+    switch (optionValue) {
+      case 'Warm':
         return TeachingStylePreference.warmAndConversational;
-
-      // Backend enum values
-      case 'CALM_AND_REFLECTIVE':
-      case 'CALM':
-      case 'REFLECTIVE':
-      // API option labels
-      case 'ACADEMIC':
+      case 'Calm':
         return TeachingStylePreference.calmAndReflective;
-
-      // Backend enum values
-      case 'PASSIONATE_AND_HIGH_ENERGY':
-      case 'PASSIONATE':
-      case 'HIGH_ENERGY':
-      // API option labels
-      case 'BALANCED':
+      case 'Passionate':
         return TeachingStylePreference.passionateAndHighEnergy;
-
       default:
         return null;
     }
@@ -99,16 +76,46 @@ enum EnvironmentPreference {
     );
   }
 
-  /// Map from option label/value to enum
+  /// Map from option label/value to enum (from API response)
   static EnvironmentPreference? fromOptionValue(String optionValue) {
-    final normalized = optionValue.toUpperCase().replaceAll(' ', '_');
-    switch (normalized) {
-      case 'TRADITIONAL':
+    switch (optionValue) {
+      case 'Traditional':
         return EnvironmentPreference.traditional;
-      case 'CONTEMPORARY':
+      case 'Contemporary':
         return EnvironmentPreference.contemporary;
-      case 'BLENDED':
+      case 'Blended':
         return EnvironmentPreference.blended;
+      default:
+        return null;
+    }
+  }
+}
+
+/// Enum for Gender Preference
+enum GenderPreference {
+  male('MALE'),
+  female('FEMALE'),
+  either('EITHER');
+
+  final String value;
+  const GenderPreference(this.value);
+
+  static GenderPreference fromValue(String value) {
+    return GenderPreference.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => GenderPreference.either,
+    );
+  }
+
+  /// Map from option label/value to enum (from API response)
+  static GenderPreference? fromOptionValue(String optionValue) {
+    switch (optionValue) {
+      case 'Male':
+        return GenderPreference.male;
+      case 'Female':
+        return GenderPreference.female;
+      case 'Either':
+        return GenderPreference.either;
       default:
         return null;
     }

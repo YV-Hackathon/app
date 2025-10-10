@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../domain/entities/speaker.dart';
 import '../providers/specific_question_providers.dart';
 import '../providers/question_provider.dart';
+import '../providers/onboarding_submission_provider.dart';
 import '../widgets/speaker_card.dart';
 
 class SimpleOnboardingPage extends ConsumerStatefulWidget {
@@ -16,13 +17,31 @@ class SimpleOnboardingPage extends ConsumerStatefulWidget {
       _SimpleOnboardingPageState();
 }
 
-class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
+class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final speakers = ref.watch(speakersProvider);
     final isLoading = ref.watch(questionsLoadingProvider);
     final error = ref.watch(questionsErrorProvider);
-    final notifier = ref.read(questionNotifierProvider.notifier);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -98,13 +117,13 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
       children: [
         Expanded(
           child: Row(
-            children: List.generate(4, (index) {
+            children: List.generate(5, (index) {
               return Expanded(
                 child: Container(
                   height: 4,
-                  margin: EdgeInsets.only(right: index < 3 ? 16 : 0),
+                  margin: EdgeInsets.only(right: index < 4 ? 16 : 0),
                   decoration: BoxDecoration(
-                    color: index == 0 ? Colors.white : const Color(0xFF353333),
+                    color: Colors.white, // All 5 steps completed
                     borderRadius: BorderRadius.circular(24),
                   ),
                 ),
@@ -210,6 +229,34 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
             children: List.generate(3, (colIndex) {
               if (colIndex < row.length) {
                 final speaker = row[colIndex];
+
+                // Calculate staggered delay based on position in grid
+                // Creates diagonal wave effect from top-left to bottom-right
+                final cardIndex = (rowIndex * 3) + colIndex;
+                final delay = cardIndex * 0.08;
+                final start = delay.clamp(0.0, 1.0);
+                final end = (delay + 0.4).clamp(0.0, 1.0);
+
+                final fadeAnimation = Tween<double>(
+                  begin: 0.0,
+                  end: 1.0,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _animationController,
+                    curve: Interval(start, end, curve: Curves.easeOut),
+                  ),
+                );
+
+                final scaleAnimation = Tween<double>(
+                  begin: 0.7,
+                  end: 1.0,
+                ).animate(
+                  CurvedAnimation(
+                    parent: _animationController,
+                    curve: Interval(start, end, curve: Curves.easeOut),
+                  ),
+                );
+
                 return Expanded(
                   child: SizedBox(
                     height:
@@ -222,13 +269,19 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
                           width: 101, // Always reserve space for largest card
                           height: 101,
                         ),
-                        // Speaker card centered in the reserved space
-                        SpeakerCard(
-                          speaker: speaker,
-                          onTap:
-                              () => ref
-                                  .read(questionNotifierProvider.notifier)
-                                  .toggleSpeaker(speaker.id),
+                        // Speaker card centered in the reserved space with animation
+                        FadeTransition(
+                          opacity: fadeAnimation,
+                          child: ScaleTransition(
+                            scale: scaleAnimation,
+                            child: SpeakerCard(
+                              speaker: speaker,
+                              onTap:
+                                  () => ref
+                                      .read(questionNotifierProvider.notifier)
+                                      .toggleSpeaker(speaker.id),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -253,12 +306,22 @@ class _SimpleOnboardingPageState extends ConsumerState<SimpleOnboardingPage> {
       child: ElevatedButton(
         onPressed:
             hasSelection
-                ? () {
-                  // Use callback if provided, otherwise use default navigation
+                ? () async {
+                  // Submit onboarding with selected speakers
+                  print(
+                    '🚀 Triggering onboarding submission from speakers page...',
+                  );
+                  await ref
+                      .read(onboardingSubmissionNotifierProvider.notifier)
+                      .submitOnboarding();
+
+                  print('✅ Onboarding submission completed, navigating...');
+
+                  // Navigate after submission completes
                   if (widget.onNext != null) {
                     widget.onNext!();
                   } else if (mounted) {
-                    context.go('/question');
+                    context.go('/personalization-intro');
                   }
                 }
                 : null,

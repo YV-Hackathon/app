@@ -6,16 +6,17 @@ import '../../domain/entities/question_option.dart';
 import '../providers/specific_question_providers.dart';
 import '../providers/question_provider.dart';
 
-class TeachingStylePage extends ConsumerStatefulWidget {
+class GenderPreferencePage extends ConsumerStatefulWidget {
   final VoidCallback? onNext;
 
-  const TeachingStylePage({super.key, this.onNext});
+  const GenderPreferencePage({super.key, this.onNext});
 
   @override
-  ConsumerState<TeachingStylePage> createState() => _TeachingStylePageState();
+  ConsumerState<GenderPreferencePage> createState() =>
+      _GenderPreferencePageState();
 }
 
-class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
+class _GenderPreferencePageState extends ConsumerState<GenderPreferencePage>
     with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
 
@@ -37,7 +38,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
 
   @override
   Widget build(BuildContext context) {
-    final question = ref.watch(teachingStyleQuestionProvider);
+    final question = ref.watch(genderQuestionProvider);
     final isLoading = ref.watch(questionsLoadingProvider);
     final error = ref.watch(questionsErrorProvider);
     final questionNotifier = ref.read(questionNotifierProvider.notifier);
@@ -92,6 +93,8 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
       );
     }
 
+    final currentQuestion = question;
+
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: SafeArea(
@@ -108,17 +111,17 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
               const SizedBox(height: 70),
 
               // Description section
-              _buildDescriptionSection(),
+              _buildDescriptionSection(currentQuestion),
 
               const SizedBox(height: 24),
 
-              // Teaching style options
-              Expanded(child: _buildTeachingStyleOptions(question)),
+              // Question options
+              Expanded(child: _buildQuestionOptions(currentQuestion)),
 
               const SizedBox(height: 24),
 
               // Continue button
-              _buildContinueButton(question),
+              _buildContinueButton(currentQuestion),
 
               const SizedBox(height: 16),
             ],
@@ -139,7 +142,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
                   height: 4,
                   margin: EdgeInsets.only(right: index < 4 ? 16 : 0),
                   decoration: BoxDecoration(
-                    color: index < 2 ? Colors.white : const Color(0xFF353333),
+                    color: index < 3 ? Colors.white : const Color(0xFF353333),
                     borderRadius: BorderRadius.circular(24),
                   ),
                 ),
@@ -160,23 +163,23 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
     );
   }
 
-  Widget _buildDescriptionSection() {
-    return const Column(
+  Widget _buildDescriptionSection(Question question) {
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Find a Church',
-          style: TextStyle(
+          question.description,
+          style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
             color: Color(0xFFBFBDBD),
             height: 1.25,
           ),
         ),
-        SizedBox(height: 8),
+        const SizedBox(height: 8),
         Text(
-          'What style of teaching do you connect with most?',
-          style: TextStyle(
+          question.title,
+          style: const TextStyle(
             fontSize: 25,
             fontWeight: FontWeight.bold,
             color: Colors.white,
@@ -188,7 +191,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
     );
   }
 
-  Widget _buildTeachingStyleOptions(Question question) {
+  Widget _buildQuestionOptions(Question question) {
     final questionState = ref.watch(questionNotifierProvider);
     final selectedOptionId = questionState.selectedAnswers[question.id];
 
@@ -226,7 +229,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
             opacity: fadeAnimation,
             child: Padding(
               padding: const EdgeInsets.only(bottom: 24),
-              child: _buildTeachingStyleCard(
+              child: _buildOptionCard(
                 option: option,
                 isSelected: isSelected,
                 onTap:
@@ -241,7 +244,7 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
     );
   }
 
-  Widget _buildTeachingStyleCard({
+  Widget _buildOptionCard({
     required QuestionOption option,
     required bool isSelected,
     required VoidCallback onTap,
@@ -265,20 +268,18 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
         child: Row(
           children: [
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: Expanded(
-                child: Text(
-                  option.title,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                    height: 1.25,
-                  ),
+              padding: const EdgeInsets.symmetric(vertical: 20),
+              child: Text(
+                option.title,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                  height: 1.25,
                 ),
               ),
             ),
-            Spacer(),
+            const Spacer(),
             _buildRadioButton(isSelected),
           ],
         ),
