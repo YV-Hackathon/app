@@ -6,6 +6,8 @@ import '../../features/onboarding/data/models/onboarding_submission_response.dar
 import '../../features/onboarding/data/models/sermon_recommendation_response.dart';
 import '../../features/onboarding/data/models/sermon_preference_request.dart';
 import '../../features/onboarding/data/models/sermon_preference_response.dart';
+import '../../features/churches/data/models/church_recommendation_response.dart';
+import '../../features/churches/data/models/church_model.dart';
 
 part 'api_client.g.dart';
 
@@ -33,4 +35,15 @@ abstract class ApiClient {
   Future<SermonPreferenceResponse> submitSermonPreference(
     @Body() SermonPreferenceRequest request,
   );
+
+  @GET('/api/v1/church-recommendations/recommendations/{userId}')
+  Future<ChurchRecommendationsResponse> getChurchRecommendations(
+    @Path('userId') int userId, {
+    @Query('limit') int? limit,
+    @Query('use_ai') bool? useAi,
+    @Query('refresh') bool? refresh,
+  });
+
+  @GET('/api/v1/churches/{church_id}')
+  Future<ChurchModel> getChurch(@Path('church_id') int churchId);
 }

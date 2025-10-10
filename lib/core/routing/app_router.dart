@@ -1,5 +1,6 @@
-import 'package:gloo_hackathon/features/splash/presentation/pages/simple_splash_page.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/churches/domain/entities/church.dart';
 import '../../features/churches/domain/entities/church_section.dart';
 import '../../features/churches/domain/entities/pastor.dart';
@@ -10,12 +11,14 @@ import '../../features/churches/presentation/pages/see_all_churches_page.dart';
 import '../../features/churches/presentation/pages/see_all_pastors_page.dart';
 import '../../features/churches/presentation/pages/see_all_churches_for_pastor_page.dart';
 import '../../features/churches/presentation/pages/see_all_sermons_page.dart';
+import '../../features/churches/presentation/providers/church_recommendation_provider.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/auth/presentation/pages/login_page.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/onboarding/presentation/pages/unified_onboarding_page.dart';
 import '../../features/onboarding/presentation/pages/loading_screen_page.dart';
 import '../../features/onboarding/presentation/pages/sermon_clips_page.dart';
+import '../constants/app_colors.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/splash',
@@ -97,25 +100,8 @@ final appRouter = GoRouter(
       path: '/church/:churchId',
       name: 'church-profile',
       builder: (context, state) {
-        final churchId = state.pathParameters['churchId']!;
-        // For now, we'll create a mock church. In a real app, you'd fetch this from a service
-        final church = Church(
-          id: churchId,
-          name: 'Grace Community Church',
-          description:
-              'Our mission is to glorify God by proclaiming the gospel of Jesus Christ through the power of the Holy Spirit, for the salvation of the lost and edification of the church.',
-          imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
-          distance: 4.8,
-          rating: 96.0,
-          attributes: [
-            'Expository',
-            'Traditional Worship',
-            'Multilingual',
-            'Family-Friendly',
-            'Global Missions',
-          ],
-        );
-        return ChurchProfilePage(church: church);
+        final churchId = int.parse(state.pathParameters['churchId']!);
+        return ChurchProfilePage(churchId: churchId);
       },
     ),
 
@@ -152,141 +138,98 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final sectionTitle = state.pathParameters['sectionTitle']!;
 
-        // Create mock church sections based on the section title
-        // In a real app, you'd fetch this data from a service
-        ChurchSection section;
-
-        switch (sectionTitle.toLowerCase().replaceAll(' ', '-')) {
-          case 'top-picks':
-            section = ChurchSection(
-              title: 'Top Picks',
-              churches: [
-                const Church(
-                  id: '4',
-                  name: 'Life.Church Edmond',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_2.png',
-                  distance: 4.8,
-                  rating: 96,
-                  attributes: ['Contemporary', 'Large'],
-                ),
-                const Church(
-                  id: '5',
-                  name: 'Coffee Creek Church',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
-                  distance: 2.4,
-                  rating: 89,
-                  attributes: ['Traditional', 'Medium'],
-                ),
-                const Church(
-                  id: '6',
-                  name: 'Hope Church',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_3.png',
-                  distance: -1,
-                  rating: 92,
-                  attributes: ['Contemporary', 'Online'],
-                  isOnline: true,
-                ),
-                const Church(
-                  id: '10',
-                  name: 'Grace Community Church',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_4.png',
-                  distance: 3.2,
-                  rating: 94,
-                  attributes: ['Traditional', 'Large'],
-                ),
-                const Church(
-                  id: '11',
-                  name: 'New Life Church',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_5.png',
-                  distance: 5.1,
-                  rating: 87,
-                  attributes: ['Contemporary', 'Medium'],
-                ),
-              ],
+        // Use the church recommendation provider to get actual data
+        return Consumer(
+          builder: (context, ref, child) {
+            // TODO: Get actual user ID from authentication state
+            const userId = 6;
+            final churchRecommendationsAsync = ref.watch(
+              churchRecommendationNotifierProvider(userId),
             );
-            break;
-          case 'near-you':
-            section = ChurchSection(
-              title: 'Near You',
-              churches: [
-                const Church(
-                  id: '7',
-                  name: 'Church Name',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_4.png',
-                  distance: 3.6,
-                  rating: 85,
-                  attributes: ['Traditional', 'Small'],
-                ),
-                const Church(
-                  id: '8',
-                  name: 'Church Name',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_5.png',
-                  distance: 2.2,
-                  rating: 88,
-                  attributes: ['Contemporary', 'Medium'],
-                ),
-                const Church(
-                  id: '9',
-                  name: 'Church Name',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_6.png',
-                  distance: 8.1,
-                  rating: 91,
-                  attributes: ['Traditional', 'Large'],
-                ),
-                const Church(
-                  id: '12',
-                  name: 'First Baptist Church',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_1.png',
-                  distance: 1.8,
-                  rating: 83,
-                  attributes: ['Traditional', 'Small'],
-                ),
-                const Church(
-                  id: '13',
-                  name: 'Community Church',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_2.png',
-                  distance: 4.3,
-                  rating: 90,
-                  attributes: ['Contemporary', 'Medium'],
-                ),
-                const Church(
-                  id: '14',
-                  name: 'Faith Assembly',
-                  description:
-                      'This is the start of the church bio, where pastors state their beliefs...',
-                  imageUrl: 'assets/images/church_avatars/church_avatar_3.png',
-                  distance: 6.7,
-                  rating: 86,
-                  attributes: ['Traditional', 'Medium'],
-                ),
-              ],
-            );
-            break;
-          default:
-            section = ChurchSection(title: sectionTitle, churches: []);
-        }
 
-        return SeeAllChurchesPage(section: section);
+            return churchRecommendationsAsync.when(
+              data: (churches) {
+                ChurchSection section;
+
+                switch (sectionTitle.toLowerCase().replaceAll(' ', '-')) {
+                  case 'top-picks':
+                    // Show ALL recommendations for top picks
+                    section = ChurchSection(
+                      title: 'Top Picks',
+                      churches: churches,
+                    );
+                    break;
+                  case 'near-you':
+                    // For now, show all recommendations as "near you" too
+                    // In a real app, you'd filter by location
+                    section = ChurchSection(
+                      title: 'Near You',
+                      churches: churches,
+                    );
+                    break;
+                  default:
+                    // Default to showing all recommendations
+                    section = ChurchSection(
+                      title: sectionTitle,
+                      churches: churches,
+                    );
+                }
+
+                return SeeAllChurchesPage(section: section);
+              },
+              loading:
+                  () => const Scaffold(
+                    backgroundColor: AppColors.tabBarBackground,
+                    body: Center(
+                      child: CircularProgressIndicator(color: AppColors.white),
+                    ),
+                  ),
+              error:
+                  (error, stackTrace) => Scaffold(
+                    backgroundColor: AppColors.tabBarBackground,
+                    body: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: AppColors.white,
+                            size: 64,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Failed to load churches',
+                            style: const TextStyle(
+                              color: AppColors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            error.toString(),
+                            style: const TextStyle(
+                              color: Color(0xFFBFBDBD),
+                              fontSize: 14,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () {
+                              ref.invalidate(
+                                churchRecommendationNotifierProvider(userId),
+                              );
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+            );
+          },
+        );
       },
     ),
 
