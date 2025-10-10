@@ -378,16 +378,39 @@ class SpeakingTopic {
 }
 
 enum TeachingStyle {
-  warmAndConversational,
-  calmAndReflective,
-  passionateAndHighEnergy,
+  warmAndConversational('WARM_AND_CONVERSATIONAL'),
+  calmAndReflective('CALM_AND_REFLECTIVE'),
+  passionateAndHighEnergy('PASSIONATE_AND_HIGH_ENERGY');
+
+  final String value;
+  const TeachingStyle(this.value);
 }
 
-enum BibleApproach { moreScripture, moreApplication, balanced }
+enum BibleApproach {
+  moreScripture('MORE_SCRIPTURE'),
+  moreApplication('MORE_APPLICATION'),
+  balanced('BALANCED');
 
-enum EnvironmentStyle { traditional, contemporary, blended }
+  final String value;
+  const BibleApproach(this.value);
+}
 
-enum Gender { male, female }
+enum EnvironmentStyle {
+  traditional('TRADITIONAL'),
+  contemporary('CONTEMPORARY'),
+  blended('BLENDED');
+
+  final String value;
+  const EnvironmentStyle(this.value);
+}
+
+enum Gender {
+  male('MALE'),
+  female('FEMALE');
+
+  final String value;
+  const Gender(this.value);
+}
 
 enum SpeakingTopicCategory {
   preaching,

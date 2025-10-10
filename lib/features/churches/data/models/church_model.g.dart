@@ -155,16 +155,20 @@ _$SpeakerModelImpl _$$SpeakerModelImplFromJson(Map<String, dynamic> json) =>
               .toList() ??
           const [],
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
-      teachingStyle:
-          $enumDecodeNullable(_$TeachingStyleEnumMap, json['teaching_style']) ??
-              TeachingStyle.warmAndConversational,
-      bibleApproach:
-          $enumDecodeNullable(_$BibleApproachEnumMap, json['bible_approach']) ??
-              BibleApproach.balanced,
-      environmentStyle: $enumDecodeNullable(
-              _$EnvironmentStyleEnumMap, json['environment_style']) ??
-          EnvironmentStyle.blended,
-      gender: $enumDecodeNullable(_$GenderEnumMap, json['gender']),
+      teachingStyle: json['teaching_style'] == null
+          ? TeachingStyle.warmAndConversational
+          : const TeachingStyleConverter()
+              .fromJson(json['teaching_style'] as String),
+      bibleApproach: json['bible_approach'] == null
+          ? BibleApproach.balanced
+          : const BibleApproachConverter()
+              .fromJson(json['bible_approach'] as String),
+      environmentStyle: json['environment_style'] == null
+          ? EnvironmentStyle.blended
+          : const EnvironmentStyleConverter()
+              .fromJson(json['environment_style'] as String),
+      gender: _$JsonConverterFromJson<String, Gender>(
+          json['gender'], const GenderConverter().fromJson),
       profilePictureUrl: json['profile_picture_url'] as String?,
       isRecommended: json['is_recommended'] as bool? ?? false,
       id: (json['id'] as num).toInt(),
@@ -184,11 +188,14 @@ Map<String, dynamic> _$$SpeakerModelImplToJson(_$SpeakerModelImpl instance) =>
       'social_media': instance.socialMedia,
       'speaking_topics': instance.speakingTopics,
       'sort_order': instance.sortOrder,
-      'teaching_style': _$TeachingStyleEnumMap[instance.teachingStyle]!,
-      'bible_approach': _$BibleApproachEnumMap[instance.bibleApproach]!,
+      'teaching_style':
+          const TeachingStyleConverter().toJson(instance.teachingStyle),
+      'bible_approach':
+          const BibleApproachConverter().toJson(instance.bibleApproach),
       'environment_style':
-          _$EnvironmentStyleEnumMap[instance.environmentStyle]!,
-      'gender': _$GenderEnumMap[instance.gender],
+          const EnvironmentStyleConverter().toJson(instance.environmentStyle),
+      'gender': _$JsonConverterToJson<String, Gender>(
+          instance.gender, const GenderConverter().toJson),
       'profile_picture_url': instance.profilePictureUrl,
       'is_recommended': instance.isRecommended,
       'id': instance.id,
@@ -197,28 +204,17 @@ Map<String, dynamic> _$$SpeakerModelImplToJson(_$SpeakerModelImpl instance) =>
       'updated_at': instance.updatedAt,
     };
 
-const _$TeachingStyleEnumMap = {
-  TeachingStyle.warmAndConversational: 'warmAndConversational',
-  TeachingStyle.calmAndReflective: 'calmAndReflective',
-  TeachingStyle.passionateAndHighEnergy: 'passionateAndHighEnergy',
-};
+Value? _$JsonConverterFromJson<Json, Value>(
+  Object? json,
+  Value? Function(Json json) fromJson,
+) =>
+    json == null ? null : fromJson(json as Json);
 
-const _$BibleApproachEnumMap = {
-  BibleApproach.moreScripture: 'moreScripture',
-  BibleApproach.moreApplication: 'moreApplication',
-  BibleApproach.balanced: 'balanced',
-};
-
-const _$EnvironmentStyleEnumMap = {
-  EnvironmentStyle.traditional: 'traditional',
-  EnvironmentStyle.contemporary: 'contemporary',
-  EnvironmentStyle.blended: 'blended',
-};
-
-const _$GenderEnumMap = {
-  Gender.male: 'male',
-  Gender.female: 'female',
-};
+Json? _$JsonConverterToJson<Json, Value>(
+  Value? value,
+  Json? Function(Value value) toJson,
+) =>
+    value == null ? null : toJson(value);
 
 _$SpeakerSocialMediaModelImpl _$$SpeakerSocialMediaModelImplFromJson(
         Map<String, dynamic> json) =>

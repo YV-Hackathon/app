@@ -17,8 +17,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
     // Navigate to onboarding after 10 seconds
     Future.delayed(const Duration(seconds: 3), () {
       if (mounted) {
-        // context.go('/onboarding');
-        context.go('/home');
+        context.go('/onboarding');
       }
     });
   }
@@ -50,11 +49,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                       height: 108,
 
                       child: Center(
-                        child: Image.asset(
-                          'assets/images/Logo.png',
-                          width: 108,
-                          height: 108,
-                        ),
+                        child: Image.asset('assets/images/Logo.png'),
                       ),
                     ),
 
@@ -64,7 +59,7 @@ class _SplashPageState extends ConsumerState<SplashPage> {
                     const Text(
                       'PewPal',
                       style: TextStyle(
-                        fontSize: 38,
+                        fontSize: 34,
                         fontWeight: FontWeight.w700,
                         color: Colors.white,
                         letterSpacing: -0.75,

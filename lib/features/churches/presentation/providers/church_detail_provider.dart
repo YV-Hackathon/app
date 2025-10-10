@@ -1,6 +1,5 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../domain/entities/church_detail.dart';
-import '../../domain/repositories/church_repository.dart';
 import 'church_providers.dart';
 
 part 'church_detail_provider.g.dart';
