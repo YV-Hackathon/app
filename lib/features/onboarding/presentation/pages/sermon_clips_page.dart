@@ -882,7 +882,7 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
     // Navigate to church profile page
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => ChurchProfilePage(church: church),
+        builder: (context) => ChurchProfilePage(churchId: int.parse(church.id)),
       ),
     );
   }

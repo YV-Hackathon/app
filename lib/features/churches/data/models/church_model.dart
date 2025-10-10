@@ -4,6 +4,56 @@ import '../../domain/entities/church_detail.dart';
 part 'church_model.freezed.dart';
 part 'church_model.g.dart';
 
+// Custom enum converters
+class TeachingStyleConverter implements JsonConverter<TeachingStyle, String> {
+  const TeachingStyleConverter();
+
+  @override
+  TeachingStyle fromJson(String json) {
+    return TeachingStyle.values.firstWhere((e) => e.value == json);
+  }
+
+  @override
+  String toJson(TeachingStyle object) => object.value;
+}
+
+class BibleApproachConverter implements JsonConverter<BibleApproach, String> {
+  const BibleApproachConverter();
+
+  @override
+  BibleApproach fromJson(String json) {
+    return BibleApproach.values.firstWhere((e) => e.value == json);
+  }
+
+  @override
+  String toJson(BibleApproach object) => object.value;
+}
+
+class EnvironmentStyleConverter
+    implements JsonConverter<EnvironmentStyle, String> {
+  const EnvironmentStyleConverter();
+
+  @override
+  EnvironmentStyle fromJson(String json) {
+    return EnvironmentStyle.values.firstWhere((e) => e.value == json);
+  }
+
+  @override
+  String toJson(EnvironmentStyle object) => object.value;
+}
+
+class GenderConverter implements JsonConverter<Gender, String> {
+  const GenderConverter();
+
+  @override
+  Gender fromJson(String json) {
+    return Gender.values.firstWhere((e) => e.value == json);
+  }
+
+  @override
+  String toJson(Gender object) => object.value;
+}
+
 @freezed
 class ChurchModel with _$ChurchModel {
   const factory ChurchModel({
@@ -91,15 +141,18 @@ class SpeakerModel with _$SpeakerModel {
     List<SpeakingTopicModel> speakingTopics,
     @JsonKey(name: 'sort_order') @Default(0) int sortOrder,
     @JsonKey(name: 'teaching_style')
+    @TeachingStyleConverter()
     @Default(TeachingStyle.warmAndConversational)
     TeachingStyle teachingStyle,
     @JsonKey(name: 'bible_approach')
+    @BibleApproachConverter()
     @Default(BibleApproach.balanced)
     BibleApproach bibleApproach,
     @JsonKey(name: 'environment_style')
+    @EnvironmentStyleConverter()
     @Default(EnvironmentStyle.blended)
     EnvironmentStyle environmentStyle,
-    Gender? gender,
+    @GenderConverter() Gender? gender,
     @JsonKey(name: 'profile_picture_url') String? profilePictureUrl,
     @JsonKey(name: 'is_recommended') @Default(false) bool isRecommended,
     required int id,

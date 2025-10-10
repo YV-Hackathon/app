@@ -76,23 +76,9 @@ class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
 
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              child: Row(
-                children: [
-                  SizedBox(
-                    height: 42,
-                    width: 42,
-                    child: Image.asset('assets/images/app_logo.png'),
-                  ),
-                  SizedBox(width: 8),
-                  Text(
-                    'PewPal',
-                    style: TextStyle(
-                      fontSize: AppFonts.lg,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.white,
-                      fontFamily: 'DM Sans',
-                    ),
-                  ),
+              child: Row(children: [
+                 
+                
                 ],
               ),
             ),
@@ -231,7 +217,7 @@ class _ChurchCarouselHeaderState extends State<ChurchCarouselHeader> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(size),
         image: DecorationImage(
-          image: AssetImage(church.imageUrl),
+          image: NetworkImage(church.imageUrl),
           fit: BoxFit.cover,
         ),
         boxShadow: [

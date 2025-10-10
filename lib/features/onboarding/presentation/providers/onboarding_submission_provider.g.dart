@@ -50,7 +50,7 @@ final submitOnboardingUseCaseProvider =
 // ignore: unused_element
 typedef SubmitOnboardingUseCaseRef = ProviderRef<SubmitOnboardingUseCase>;
 String _$recommendedSermonsHash() =>
-    r'b9ee225dab3d31a704386f31be260539d3d7119a';
+    r'ceb308a7d9352cf5aa58d99f1eac3dfef8267d7a';
 
 /// Provider to access recommended sermons from the submission response
 ///
@@ -90,7 +90,7 @@ final hasRecommendedSermonsProvider = Provider<bool>.internal(
 // ignore: unused_element
 typedef HasRecommendedSermonsRef = ProviderRef<bool>;
 String _$onboardingSubmissionNotifierHash() =>
-    r'ee003c831c1dc0badeacd269b1a16f66266bf900';
+    r'4a9ce3529d6677718fdfb8ba593499772705633f';
 
 /// Submission Notifier
 ///
