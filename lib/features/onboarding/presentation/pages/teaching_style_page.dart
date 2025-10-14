@@ -264,9 +264,9 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
         ),
         child: Row(
           children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: Expanded(
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 20.0),
                 child: Text(
                   option.title,
                   style: const TextStyle(
@@ -278,7 +278,6 @@ class _TeachingStylePageState extends ConsumerState<TeachingStylePage>
                 ),
               ),
             ),
-            Spacer(),
             _buildRadioButton(isSelected),
           ],
         ),

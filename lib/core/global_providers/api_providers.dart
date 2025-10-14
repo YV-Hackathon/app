@@ -1,4 +1,6 @@
+import 'dart:io';
 import 'package:dio/dio.dart';
+import 'package:dio/io.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../api/api_client.dart';
@@ -23,9 +25,21 @@ Dio dio(Ref ref) {
     ),
   );
 
+  // Allow self-signed certificates in development
+  // WARNING: Do NOT use this in production!
+  (dio.httpClientAdapter as IOHttpClientAdapter).createHttpClient = () {
+    final client = HttpClient();
+    client.badCertificateCallback = (X509Certificate cert, String host, int port) {
+      print('⚠️ Accepting certificate from $host:$port');
+      return true; // Accept all certificates
+    };
+    return client;
+  };
+
   print('✅ Dio configured. Base URL: ${dio.options.baseUrl}');
   print('📋 Headers: ${dio.options.headers}');
   print('⏱️ Timeout: ${dio.options.connectTimeout}');
+  print('🔓 SSL certificate verification disabled for development');
 
   // Add interceptors for logging and error handling
   dio.interceptors.add(

@@ -36,7 +36,9 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
 
   // Video player state
   VideoPlayerController? _videoController;
+  VideoPlayerController? _nextVideoController; // Preload next video
   bool _isVideoInitialized = false;
+  bool _isNextVideoInitialized = false;
   int _currentVideoIndex = 0;
   bool _showPlayPauseIcon = false;
   Timer? _iconTimer;
@@ -84,6 +86,7 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
     _pageEntranceController.dispose();
     _videoController?.removeListener(_videoListener);
     _videoController?.dispose();
+    _nextVideoController?.dispose();
     _iconTimer?.cancel();
 
     // Only dispose if not already disposed in _handleComplete
@@ -121,6 +124,39 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
     // If paused, icon stays visible (no timer)
   }
 
+  void _preloadNextVideo(int nextIndex) {
+    // Don't preload if we're at the last video or if already preloaded
+    if (nextIndex >= _sermonClips.length || _nextVideoController != null) {
+      return;
+    }
+
+    print('🎬 Preloading next video at index $nextIndex');
+    _nextVideoController = VideoPlayerController.networkUrl(
+      Uri.parse(_sermonClips[nextIndex].videoUrl),
+    );
+    
+    _nextVideoController!
+        .initialize()
+        .then((_) {
+          if (mounted) {
+            setState(() {
+              _isNextVideoInitialized = true;
+            });
+            // Pause the preloaded video so it doesn't autoplay
+            _nextVideoController!.pause();
+            // Seek to beginning to ensure it's ready
+            _nextVideoController!.seekTo(Duration.zero);
+            print('✅ Next video preloaded successfully');
+          }
+        })
+        .catchError((error) {
+          print('⚠️ Error preloading next video: $error');
+          _nextVideoController?.dispose();
+          _nextVideoController = null;
+          _isNextVideoInitialized = false;
+        });
+  }
+
   void _initializeVideo() {
     if (_sermonClips.isNotEmpty) {
       setState(() {
@@ -143,6 +179,9 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
               _videoController!.play();
               // Show pause icon briefly when video starts playing
               _showIconTemporarily(isPlaying: true);
+              
+              // Preload the next video in the background
+              _preloadNextVideo(_currentVideoIndex + 1);
             }
           })
           .catchError((error) {
@@ -166,44 +205,83 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
 
   void _loadVideo(int index) {
     if (index < _sermonClips.length) {
-      // Set loading state
-      setState(() {
-        _isLoadingVideo = true;
-        _isVideoInitialized = false;
-      });
-
       // Remove listener from old controller before disposing
       _videoController?.removeListener(_videoListener);
       _videoController?.dispose();
 
-      _videoController = VideoPlayerController.networkUrl(
-        Uri.parse(_sermonClips[index].videoUrl),
-      );
-      _videoController!
-          .initialize()
-          .then((_) {
-            if (mounted) {
-              setState(() {
-                _isVideoInitialized = true;
-                _currentVideoIndex = index;
-                _isLoadingVideo = false;
-              });
-              // Listen to video position updates
-              _videoController!.addListener(_videoListener);
-              _videoController!.play();
-              // Show pause icon briefly when new video starts playing
-              _showIconTemporarily(isPlaying: true);
-            }
-          })
-          .catchError((error) {
-            // Handle video loading error
-            if (mounted) {
-              setState(() {
-                _isLoadingVideo = false;
-              });
-            }
-            print('Error loading video: $error');
-          });
+      // Check if we have a preloaded video ready for this index
+      if (_nextVideoController != null && _isNextVideoInitialized && 
+          index == _currentVideoIndex + 1) {
+        print('🚀 Using preloaded video for index $index - instant transition!');
+        
+        // Use the preloaded controller as the current one
+        _videoController = _nextVideoController;
+        _nextVideoController = null;
+        _isNextVideoInitialized = false;
+        
+        setState(() {
+          _isVideoInitialized = true;
+          _currentVideoIndex = index;
+          _isLoadingVideo = false;
+        });
+        
+        // Listen to video position updates
+        _videoController!.addListener(_videoListener);
+        // Seek to start and play
+        _videoController!.seekTo(Duration.zero);
+        _videoController!.play();
+        // Show pause icon briefly when new video starts playing
+        _showIconTemporarily(isPlaying: true);
+        
+        // Preload the next video in the background
+        _preloadNextVideo(index + 1);
+      } else {
+        // No preloaded video available, load normally
+        print('📥 Loading video normally for index $index');
+        
+        // Dispose any existing preloaded controller that we won't use
+        _nextVideoController?.dispose();
+        _nextVideoController = null;
+        _isNextVideoInitialized = false;
+        
+        // Set loading state
+        setState(() {
+          _isLoadingVideo = true;
+          _isVideoInitialized = false;
+        });
+
+        _videoController = VideoPlayerController.networkUrl(
+          Uri.parse(_sermonClips[index].videoUrl),
+        );
+        _videoController!
+            .initialize()
+            .then((_) {
+              if (mounted) {
+                setState(() {
+                  _isVideoInitialized = true;
+                  _currentVideoIndex = index;
+                  _isLoadingVideo = false;
+                });
+                // Listen to video position updates
+                _videoController!.addListener(_videoListener);
+                _videoController!.play();
+                // Show pause icon briefly when new video starts playing
+                _showIconTemporarily(isPlaying: true);
+                
+                // Preload the next video in the background
+                _preloadNextVideo(index + 1);
+              }
+            })
+            .catchError((error) {
+              // Handle video loading error
+              if (mounted) {
+                setState(() {
+                  _isLoadingVideo = false;
+                });
+              }
+              print('Error loading video: $error');
+            });
+      }
     }
   }
 
@@ -443,8 +521,9 @@ class _SermonClipsPageState extends ConsumerState<SermonClipsPage>
           cardsCount: _sermonClips.length,
           onSwipe: (previousIndex, currentIndex, direction) {
             // Early exit if already completed or not mounted
-            if (!mounted || _hasTriggeredCompletion || previousIndex == null)
+            if (!mounted || _hasTriggeredCompletion || previousIndex == null) {
               return;
+            }
 
             print(
               'Card $previousIndex swiped to the ${direction.name}. currentIndex: $currentIndex',

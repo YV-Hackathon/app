@@ -20,8 +20,6 @@ final networkServiceProvider = AutoDisposeProvider<NetworkService>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef NetworkServiceRef = AutoDisposeProviderRef<NetworkService>;
 String _$storageServiceHash() => r'ffa833dab04a84e84a4d9c9e2b9cdc4b1729853d';
 
@@ -37,8 +35,6 @@ final storageServiceProvider = AutoDisposeProvider<StorageService>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef StorageServiceRef = AutoDisposeProviderRef<StorageService>;
 String _$splashNotifierHash() => r'4f0ba88ce45af4cc371650bc40f320d2c111e15e';
 
@@ -57,4 +53,4 @@ final splashNotifierProvider =
 
 typedef _$SplashNotifier = AutoDisposeNotifier<SplashState>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

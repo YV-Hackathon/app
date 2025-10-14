@@ -22,8 +22,6 @@ final featuredSermonsRepositoryProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef FeaturedSermonsRepositoryRef = ProviderRef<FeaturedSermonsRepository>;
 String _$featuredSermonsNotifierHash() =>
     r'77420dee3d81c20287859141446e5f8f8e00c798';
@@ -180,8 +178,6 @@ class FeaturedSermonsNotifierProvider
   }
 }
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 mixin FeaturedSermonsNotifierRef
     on AutoDisposeAsyncNotifierProviderRef<List<FeaturedSermonItem>> {
   /// The parameter `churchId` of this provider.
@@ -197,4 +193,4 @@ class _FeaturedSermonsNotifierProviderElement
   int get churchId => (origin as FeaturedSermonsNotifierProvider).churchId;
 }
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

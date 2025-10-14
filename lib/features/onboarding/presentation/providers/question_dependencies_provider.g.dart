@@ -22,8 +22,6 @@ final questionRemoteDataSourceProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef QuestionRemoteDataSourceRef = ProviderRef<QuestionRemoteDataSource>;
 String _$questionRepositoryHash() =>
     r'd5b1f59948543366103f97972f1d5a1e8a30bf80';
@@ -40,8 +38,6 @@ final questionRepositoryProvider = Provider<QuestionRepository>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef QuestionRepositoryRef = ProviderRef<QuestionRepository>;
 String _$getQuestionsUseCaseHash() =>
     r'39f9c2f6edb0554887f15f6615a76134faa729d5';
@@ -58,8 +54,6 @@ final getQuestionsUseCaseProvider = Provider<GetQuestionsUseCase>.internal(
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef GetQuestionsUseCaseRef = ProviderRef<GetQuestionsUseCase>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member

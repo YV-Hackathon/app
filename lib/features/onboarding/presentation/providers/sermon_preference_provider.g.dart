@@ -24,8 +24,6 @@ final sermonPreferenceRepositoryProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef SermonPreferenceRepositoryRef = ProviderRef<SermonPreferenceRepository>;
 String _$submitSermonPreferenceUseCaseHash() =>
     r'a6d4bfa693033a10c8292ad542b68f88dd362077';
@@ -45,8 +43,6 @@ final submitSermonPreferenceUseCaseProvider =
   allTransitiveDependencies: null,
 );
 
-@Deprecated('Will be removed in 3.0. Use Ref instead')
-// ignore: unused_element
 typedef SubmitSermonPreferenceUseCaseRef
     = ProviderRef<SubmitSermonPreferenceUseCase>;
 String _$sermonPreferenceNotifierHash() =>
@@ -69,4 +65,4 @@ final sermonPreferenceNotifierProvider =
 
 typedef _$SermonPreferenceNotifier = AutoDisposeNotifier<void>;
 // ignore_for_file: type=lint
-// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member, deprecated_member_use_from_same_package
+// ignore_for_file: subtype_of_sealed_class, invalid_use_of_internal_member, invalid_use_of_visible_for_testing_member
